@@ -11,9 +11,17 @@
         @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
         .cart-slide { transform: translateX(100%); transition: transform 0.3s ease-in-out; }
         .cart-slide.open { transform: translateX(0); }
+        /* Lightbox Styles */
+        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        #lightbox.active { display: flex; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl">
+        <button class="absolute top-5 right-5 text-white text-4xl">&times;</button>
+    </div>
 
     <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-4 flex justify-between items-center">
         <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-purple-700">Petal Chain</h1>
@@ -24,30 +32,23 @@
     </nav>
 
     <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-10 px-6 text-center">
-        <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling, start shopping – fresh picks delivered fast!</h2>
-        <p class="text-lg md:text-xl opacity-90">Your favorites. Right to your door.</p>
+        <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling, start shopping!</h2>
+        <p class="text-lg md:text-xl opacity-90">Fresh picks delivered fast.</p>
+        <p class="text-lg md:text-xl opacity-90">Delivery only R3.</p>
     </header>
 
     <div class="max-w-6xl mx-auto px-4 py-6">
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
-            <div class="relative flex-grow">
-                <input 
-                    id="searchInput" 
-                    type="text" 
-                    placeholder="Search products..." 
-                    class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm text-lg"
-                    oninput="filterProducts()"
-                >
-                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            </div>
+        <div class="relative flex-grow mb-6">
+            <input id="searchInput" type="text" placeholder="Search products..." class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" oninput="filterProducts()">
+            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
         </div>
 
         <div class="flex flex-wrap gap-3 mb-8">
-            <button onclick="filterCategory('all')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">All</button>
-            <button onclick="filterCategory('Snacks')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">Snacks</button>
-            <button onclick="filterCategory('Soda')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">Soda</button>
-            <button onclick="filterCategory('Airtime')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">Airtime</button>
-            <button onclick="filterCategory('Clothes')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">Clothes</button>
+            <button onclick="filterCategory('all')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">All</button>
+            <button onclick="filterCategory('Deals')" class="category-btn px-5 py-2.5 rounded-full font-bold bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition">🔥 Deals</button>
+            <button onclick="filterCategory('Snacks')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Snacks</button>
+            <button onclick="filterCategory('Soda')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Soda</button>
+            <button onclick="filterCategory('Clothes')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Clothes</button>
         </div>
 
         <div id="product-container" class="product-grid"></div>
@@ -57,29 +58,15 @@
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">Your Cart</h2>
-                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800 text-3xl">×</button>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
-
             <div id="cart-items" class="mb-8 space-y-4"></div>
-
-            <div class="border-t pt-6">
-                <div class="space-y-3 mb-6">
-                    <div class="flex justify-between text-lg">
-                        <span>Subtotal</span>
-                        <span id="cart-subtotal">R0.00</span>
-                    </div>
-                    <div class="flex justify-between text-lg">
-                        <span>Delivery Fee</span>
-                        <span>R3.00</span>
-                    </div>
-                    <div class="flex justify-between text-xl font-bold border-t pt-3">
-                        <span>Total</span>
-                        <span id="cart-total">R3.00</span>
-                    </div>
-                </div>
-                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 transition active:scale-95 shadow-md">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i>
-                    Confirm & Send Order
+            <div class="border-t pt-6 space-y-3 mb-6">
+                <div class="flex justify-between"><span>Subtotal</span><span id="cart-subtotal">R0.00</span></div>
+                <div class="flex justify-between"><span>Delivery</span><span>R3.00</span></div>
+                <div class="flex justify-between text-xl font-bold"><span>Total</span><span id="cart-total">R3.00</span></div>
+                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md mt-4">
+                    <i class="fa-brands fa-whatsapp text-2xl"></i> Confirm & Send Order
                 </button>
             </div>
         </div>
@@ -90,18 +77,19 @@
             © 2026 Petal Chain - The Market. All rights reserved.
         </div>
     </footer>
-
+    
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
         const DELIVERY_FEE = 3.00;
 
         const products = [
-            { id: 1, name: "Lay's Classic", price: 18.50, category: "Snacks", img: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=300&q=80" },
-            { id: 2, name: "Coca-Cola 500ml", price: 15.00, category: "Soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80" },
-            { id: 3, name: "Vodacom Airtime", price: 50.00, category: "Airtime", img: "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?auto=format&fit=crop&w=300&q=80" },
-            { id: 4, name: "MTN Airtime", price: 20.00, category: "Airtime", img: "https://images.unsplash.com/photo-1512428813833-df421959b685?auto=format&fit=crop&w=300&q=80" },
-            { id: 5, name: "White Oversized Tee", price: 250.00, category: "Clothes", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=80" },
-            { id: 6, name: "Energy Drink", price: 22.00, category: "Soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80" }
+            { id: 1, name: "Lay's Classic", price: 18.50, category: "Snacks", img: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500" },
+            { id: 2, name: "Coca-Cola 500ml", price: 15.00, category: "Soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500" },
+            { id: 7, name: "Combo: Chips & Dip", price: 45.00, category: "Deals", img: "https://images.unsplash.com/photo-1621447509323-9899ac4dd811?w=500" },
+            { id: 8, name: "Bulk Soda (6 Pack)", price: 75.00, category: "Deals", img: "https://images.unsplash.com/photo-1527960669566-f882ba85a4c6?w=500" },
+            { id: 9, name: "Summer Hoodie", price: 199.00, category: "Deals", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500" },
+            { id: 5, name: "White Oversized Tee", price: 250.00, category: "Clothes", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500" },
+            { id: 6, name: "Energy Drink", price: 22.00, category: "Soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500" }
         ];
 
         let cart = [];
@@ -111,13 +99,21 @@
             const container = document.getElementById('product-container');
             container.innerHTML = list.map(p => `
                 <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
-                    <img src="${p.img}" class="w-full h-40 object-cover rounded-2xl mb-4">
-                    <p class="text-xs text-purple-600 font-semibold uppercase mb-1">${p.category}</p>
-                    <h3 class="font-bold text-base md:text-lg mb-2 flex-grow">${p.name}</h3>
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-40 object-cover rounded-2xl mb-4 cursor-zoom-in hover:opacity-90 transition">
+                    <p class="text-xs ${p.category === 'Deals' ? 'text-red-600' : 'text-purple-600'} font-semibold uppercase mb-1">${p.category}</p>
+                    <h3 class="font-bold text-base mb-2 flex-grow">${p.name}</h3>
+                    
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-500 block mb-1">Quantity</label>
+                        <select id="qty-${p.id}" class="w-full bg-gray-50 border border-gray-200 rounded-lg text-sm p-1 outline-none">
+                            ${Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                        </select>
+                    </div>
+
                     <div class="flex justify-between items-center">
                         <span class="font-extrabold text-xl text-gray-900">R${p.price.toFixed(2)}</span>
-                        <button onclick="addToCart(${p.id})" class="bg-purple-700 text-white h-10 w-10 rounded-full flex items-center justify-center hover:bg-purple-800 transition shadow-md">
-                            <i class="fa-solid fa-plus text-lg"></i>
+                        <button onclick="addToCart(${p.id})" class="bg-purple-700 text-white h-10 w-10 rounded-full flex items-center justify-center hover:bg-purple-800 shadow-md">
+                            <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
                 </div>
@@ -126,87 +122,71 @@
 
         function addToCart(id) {
             const product = products.find(p => p.id === id);
-            cart.push(product);
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            
+            // Check if item exists in cart to update qty, else add new
+            const existing = cart.find(item => item.id === id);
+            if(existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({ ...product, qty: qty });
+            }
             updateUI();
         }
 
         function updateUI() {
-            const count = cart.length;
-            const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-            const total = count > 0 ? subtotal + DELIVERY_FEE : 0;
-
-            document.getElementById('cart-count').innerText = count;
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const total = cart.length > 0 ? subtotal + DELIVERY_FEE : 0;
+            
+            document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.qty, 0);
             document.getElementById('cart-subtotal').innerText = `R${subtotal.toFixed(2)}`;
             document.getElementById('cart-total').innerText = `R${total.toFixed(2)}`;
             
             const itemsContainer = document.getElementById('cart-items');
-            itemsContainer.innerHTML = cart.length === 0 
-                ? '<p class="text-center text-gray-500 py-8">Your cart is empty</p>'
-                : cart.map((item, index) => `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
-                        <div>
-                            <p class="font-medium">${item.name}</p>
-                            <p class="text-sm text-gray-600">R${item.price.toFixed(2)}</p>
-                        </div>
-                        <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
+            itemsContainer.innerHTML = cart.length === 0 ? '<p class="text-center py-8">Empty cart</p>' : 
+                cart.map((item, index) => `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                    <div>
+                        <p class="font-medium">${item.name} (x${item.qty})</p>
+                        <p class="text-sm">R${(item.price * item.qty).toFixed(2)}</p>
                     </div>
-                `).join('');
+                    <button onclick="removeFromCart(${index})" class="text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                </div>`).join('');
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateUI();
-        }
+        function removeFromCart(i) { cart.splice(i, 1); updateUI(); }
+        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
 
-        function toggleCart() {
-            document.getElementById('cart-drawer').classList.toggle('open');
-        }
-
-        function sendToWhatsApp() {
-            if (cart.length === 0) return alert("Your cart is empty!");
-
-            const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-            const total = subtotal + DELIVERY_FEE;
-
-            const itemsSummary = cart.reduce((acc, item) => {
-                acc[item.name] = (acc[item.name] || 0) + 1;
-                return acc;
-            }, {});
-
-            let itemList = "";
-            for (const [name, qty] of Object.entries(itemsSummary)) {
-                itemList += `• ${name} × ${qty}\n`;
-            }
-
-            const message = `*Petal Chain Order*\n\n` +
-                            `*Items:*\n${itemList}\n` +
-                            `*Subtotal:* R${subtotal.toFixed(2)}\n` +
-                            `*Delivery Fee:* R${DELIVERY_FEE.toFixed(2)}\n` +
-                            `*Total Amount:* R${total.toFixed(2)}\n\n` +
-                            `Please confirm my order!`;
-
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
-        }
-
-        function filterCategory(category) {
-            currentCategory = category;
+        function filterCategory(cat) {
+            currentCategory = cat;
             document.querySelectorAll('.category-btn').forEach(btn => {
-                const isActive = btn.textContent.trim() === (category === 'all' ? 'All' : category);
-                btn.classList.toggle('bg-purple-600', isActive);
+                const isActive = btn.innerText.includes(cat) || (cat === 'all' && btn.innerText === 'All');
+                btn.classList.toggle('bg-purple-600', isActive && cat !== 'Deals');
+                btn.classList.toggle('bg-red-600', isActive && cat === 'Deals');
                 btn.classList.toggle('text-white', isActive);
-                btn.classList.toggle('bg-purple-100', !isActive);
-                btn.classList.toggle('text-purple-800', !isActive);
             });
             filterProducts();
         }
 
         function filterProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            let filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = products.filter(p => p.name.toLowerCase().includes(q));
             if (currentCategory !== 'all') filtered = filtered.filter(p => p.category === currentCategory);
             renderProducts(filtered);
+        }
+
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.add('active');
+        }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+
+        function sendToWhatsApp() {
+            if (cart.length === 0) return alert("Cart is empty!");
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let itemsText = cart.map(i => `• ${i.name} (x${i.qty})`).join('\n');
+            const message = `*PETAL CHAIN ORDER*\n\n*Items:*\n${itemsText}\n\n*Subtotal:* R${subtotal.toFixed(2)}\n*Delivery:* R3.00\n*TOTAL:* R${(subtotal + 3).toFixed(2)}\n\nConfirm order?`;
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
         renderProducts();
