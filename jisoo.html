@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petal Chain - Group Payment Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .status-radio {
+            appearance: none;
+            width: 22px; height: 22px;
+            border: 2px solid #3b82f6;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            background: white;
+        }
+        .status-radio:checked { background-color: #3b82f6; }
+        .status-radio:checked::after {
+            content: '✓'; color: white; position: absolute;
+            top: -2px; left: 4px; font-size: 16px; font-weight: bold;
+        }
+        .modal-active { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-slate-50 flex flex-col min-h-screen">
+
+    <div id="shortfallModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black text-gray-900 mb-2">Money Short!</h3>
+            <p id="modalMessage" class="text-gray-500 text-sm mb-6">Passengers need to pay more to record this trip.</p>
+            <button onclick="closeModal()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-black transition">Close & Adjust</button>
+        </div>
+    </div>
+
+    <header class="bg-black text-white p-5 shadow-2xl sticky top-0 z-50">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-xl font-black text-blue-500 italic uppercase">Petal Chain</h1>
+                <div class="flex gap-2">
+                    <button onclick="downloadPDF()" class="bg-blue-600 text-[10px] px-3 py-1.5 rounded font-bold uppercase">Report</button>
+                    <button onclick="archiveAndReset()" class="bg-red-600 text-[10px] px-3 py-1.5 rounded font-bold uppercase">Reset</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10">
+                    <p class="text-[8px] uppercase text-gray-500 font-bold tracking-widest">Income</p>
+                    <p id="totalEarnings" class="text-sm font-bold">R 0.00</p>
+                </div>
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10">
+                    <p class="text-[8px] uppercase text-gray-500 font-bold tracking-widest">Expenses</p>
+                    <p id="totalExpenses" class="text-sm font-bold text-red-400">R 0.00</p>
+                </div>
+                <div class="bg-white/5 p-2 rounded-lg border border-white/10">
+                    <p class="text-[8px] uppercase text-gray-500 font-bold tracking-widest">Profit</p>
+                    <p id="netProfit" class="text-sm font-bold text-green-400">R 0.00</p>
+                </div>
+                <div class="bg-blue-500/20 p-2 rounded-lg border border-blue-500/30 text-blue-400">
+                    <p class="text-[8px] uppercase font-bold tracking-widest">Pass.</p>
+                    <p id="passTally" class="text-sm font-bold">0</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-12 gap-6">
+            
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-blue-50">
+                    <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest border-b pb-2 mb-4">New Trip Segment</h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Group Cash Received</label>
+                            <input type="number" id="cash" oninput="calculateLive()" class="w-full p-4 bg-blue-50 border-2 border-blue-100 rounded-2xl text-xl font-bold text-blue-700 outline-none" placeholder="0.00">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="pickup" onchange="calculateLive()" class="p-3 bg-gray-50 border rounded-xl text-sm outline-none">
+                                <option value="" disabled selected>Pickup</option>
+                                <option value="Station">Station</option>
+                                <option value="West Mall">West Mall</option>
+                                <option value="Township">Township</option>
+                            </select>
+                            <select id="destination" onchange="calculateLive()" class="p-3 bg-gray-50 border rounded-xl text-sm outline-none">
+                                <option value="" disabled selected>Destination</option>
+                                <option value="Station">Station</option>
+                                <option value="West Mall">West Mall</option>
+                                <option value="Township">Township</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <select id="passengers" onchange="calculateLive()" class="w-full p-3 bg-gray-50 border rounded-xl text-sm outline-none">
+                                <option value="1">1 Passenger</option>
+                                <option value="2">2 Passengers</option>
+                                <option value="3">3 Passengers</option>
+                                <option value="4">4 Passengers</option>
+                                <option value="5">5 Passengers</option>
+                                <option value="6">6 Passengers</option>
+                                <option value="7">7 Passengers</option>
+                                <option value="8">8 Passengers</option>
+                                <option value="9">9 Passengers</option>
+                                <option value="10">10 Passengers</option>
+                                <option value="11">11 Passengers</option>
+                                <option value="12">12 Passengers</option>
+                                <option value="13">13 Passengers</option>
+                                <option value="14">14 Passengers</option>
+                                <option value="15">15 Passengers</option>
+                                <option value="16">16 Passengers</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-2xl p-5 space-y-3 shadow-inner">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Trip Fee</span>
+                                <span id="displayFee" class="text-white font-mono font-bold text-xl">R 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/10 pt-3">
+                                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider italic">Group Change Left</span>
+                                <span id="displayChange" class="text-blue-400 font-mono font-bold text-xl">R 0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="recordTransaction()" class="bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition-all text-sm uppercase">Record Trip</button>
+                            <button onclick="clearPaymentGroup()" class="bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-all text-sm uppercase">Done (Reset)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 class="text-xs font-black mb-4 text-gray-400 uppercase tracking-widest border-b pb-1 text-red-500">Expenses</h2>
+                    <div class="space-y-3">
+                        <select id="expCategory" class="w-full p-3 bg-gray-50 border rounded-xl text-sm outline-none">
+                            <option value="Fuel">Fuel</option>
+                            <option value="Delivery">Delivery</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Airtime">Airtime</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <input type="number" id="expAmount" class="w-full p-3 bg-red-50 border border-red-100 rounded-xl text-sm font-bold" placeholder="Amount (R)">
+                        <button onclick="recordExpense()" class="w-full border-2 border-red-500 text-red-600 text-xs font-bold py-3 rounded-xl hover:bg-red-500 hover:text-white transition">Log Outflow</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-gray-500 font-bold uppercase border-b">
+                            <tr>
+                                <th class="p-4">Route/Item</th>
+                                <th class="p-4">Amt</th>
+                                <th class="p-4">Change Rem.</th>
+                                <th class="p-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="masterBody" class="divide-y divide-gray-100 italic"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+<footer class="bg-slate-900 text-white mt-auto border-t-4 border-blue-600">
+    <div class="container mx-auto px-6 py-8">
+        <div class="grid md:grid-cols-3 gap-8 items-center text-center md:text-left">
+            <div>
+                <h3 class="text-xl font-black text-blue-500 italic uppercase tracking-tighter">Petal Chain</h3>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Taxi Terminal Solution</p>
+            </div>
+
+            <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                <p class="text-[9px] text-gray-500 uppercase font-black mb-1">Session Status</p>
+                <div class="flex items-center justify-center md:justify-start gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-xs font-mono text-green-400">System Active & Recording</span>
+                </div>
+            </div>
+
+            <div class="text-center md:text-right">
+                <p class="text-[10px] text-gray-500 font-bold uppercase">© 2026 Petal Chain Logistics</p>
+                <p class="text-[9px] text-gray-600 italic">Professional Accounting Terminal v2.4</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script>
+        let transactions = [];
+        let expenses = [];
+        let incomeTotal = 0;
+        let expenseTotal = 0;
+        let totalPassengers = 0;
+
+        const prices = {
+            "Station-Township": 15, "Township-Station": 15,
+            "Station-West Mall": 12, "West Mall-Station": 12,
+            "Township-West Mall": 20, "West Mall-Township": 20
+        };
+
+        function calculateLive() {
+            const p = document.getElementById('pickup').value;
+            const d = document.getElementById('destination').value;
+            let rate = (p === d && p !== "") ? 8 : (prices[`${p}-${d}`] || 0);
+            
+            const pass = parseInt(document.getElementById('passengers').value) || 0;
+            const cashInput = document.getElementById('cash').value;
+            const cash = parseFloat(cashInput) || 0;
+            
+            const totalFee = rate * pass;
+            const changeDue = cashInput !== "" ? (cash - totalFee) : 0;
+
+            const displayChange = document.getElementById('displayChange');
+            displayChange.innerText = `R ${changeDue.toFixed(2)}`;
+            
+            if (changeDue < 0) {
+                displayChange.classList.replace('text-blue-400', 'text-red-500');
+            } else {
+                displayChange.classList.replace('text-red-500', 'text-blue-400');
+            }
+
+            document.getElementById('displayFee').innerText = `R ${totalFee.toFixed(2)}`;
+            return { totalFee, changeDue, pass };
+        }
+
+        function recordTransaction() {
+            const p = document.getElementById('pickup').value;
+            const d = document.getElementById('destination').value;
+            const { totalFee, changeDue, pass } = calculateLive();
+
+            if (!p || !d || totalFee === 0) return alert("Select route first.");
+
+            // NEW GUARD: Check for shortfall
+            if (changeDue < 0) {
+                const shortage = Math.abs(changeDue).toFixed(2);
+                document.getElementById('modalMessage').innerText = `Insufficient cash! This group is short by  R${shortage}. Ask passengers for the remaining amount before recording.`;
+                document.getElementById('shortfallModal').classList.remove('hidden');
+                document.body.classList.add('modal-active');
+                return; // Refuse to record
+            }
+
+            transactions.unshift({
+                id: Date.now(),
+                type: 'IN',
+                desc: `${p} to ${d} (${pass} pass)`,
+                amount: totalFee,
+                change: changeDue,
+                completed: false,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            incomeTotal += totalFee;
+            totalPassengers += pass;
+            
+            document.getElementById('cash').value = changeDue > 0 ? changeDue.toFixed(2) : '';
+            updateUI();
+            calculateLive();
+        }
+
+        function closeModal() {
+            document.getElementById('shortfallModal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }
+
+        function clearPaymentGroup() {
+            document.getElementById('cash').value = '';
+            document.getElementById('pickup').selectedIndex = 0;
+            document.getElementById('destination').selectedIndex = 0;
+            document.getElementById('passengers').selectedIndex = 0;
+            calculateLive();
+        }
+
+        function recordExpense() {
+            const cat = document.getElementById('expCategory').value;
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            if (isNaN(amt)) return alert("Enter expense amount");
+
+            expenses.unshift({
+                id: Date.now(),
+                type: 'OUT',
+                desc: `Expense: ${cat}`,
+                amount: amt,
+                change: 0,
+                completed: true,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            expenseTotal += amt;
+            updateUI();
+            document.getElementById('expAmount').value = '';
+        }
+
+        function toggleStatus(id) {
+            const item = transactions.find(t => t.id === id);
+            if (item) item.completed = !item.completed;
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('totalEarnings').innerText = `R ${incomeTotal.toFixed(2)}`;
+            document.getElementById('totalExpenses').innerText = `R ${expenseTotal.toFixed(2)}`;
+            document.getElementById('netProfit').innerText = `R ${(incomeTotal - expenseTotal).toFixed(2)}`;
+            document.getElementById('passTally').innerText = totalPassengers;
+
+            const master = document.getElementById('masterBody');
+            master.innerHTML = transactions.concat(expenses)
+                .sort((a, b) => b.id - a.id)
+                .map(item => {
+                    const isInc = item.type === 'IN';
+                    return `
+                    <tr class="${item.completed ? 'bg-blue-50/50' : ''}">
+                        <td class="p-4">
+                            <span class="block font-bold text-gray-800">${item.desc}</span>
+                            <span class="text-[9px] text-gray-400 uppercase tracking-tighter">${item.time}</span>
+                        </td>
+                        <td class="p-4 font-mono font-bold ${isInc ? 'text-blue-600' : 'text-red-500'}">R ${item.amount.toFixed(2)}</td>
+                        <td class="p-4 font-mono text-gray-400">
+                            ${isInc ? 'R ' + item.change.toFixed(2) : '-'}
+                        </td>
+                        <td class="p-4 text-center">
+                            ${isInc ? `<input type="radio" class="status-radio" ${item.completed ? 'checked' : ''} onclick="toggleStatus(${item.id})">` : '<span class="text-red-400 font-bold text-[8px] uppercase">Logged</span>'}
+                        </td>
+                    </tr>`;
+                }).join('');
+        }
+
+        function archiveAndReset() {
+            if (confirm("Reset the entire terminal?")) {
+                transactions = []; expenses = []; incomeTotal = 0; expenseTotal = 0; totalPassengers = 0;
+                clearPaymentGroup();
+                updateUI();
+            }
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Petal Chain Daily Audit", 14, 20);
+            doc.autoTable({
+                head: [['Time', 'Item', 'Amount', 'Change Rem.', 'Status']],
+                body: transactions.concat(expenses).map(i => [i.time, i.desc, `R${i.amount.toFixed(2)}`, `R${i.change.toFixed(2)}`, i.completed ? 'DONE' : 'PENDING']),
+                startY: 30
+            });
+            doc.save("PetalChain_Audit.pdf");
+        }
+    </script>
+</body>
+</html>
