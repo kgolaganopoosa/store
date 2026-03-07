@@ -6,12 +6,14 @@
     <title>Petal Chain - The Market</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <style>
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
         @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
         .cart-slide { transform: translateX(100%); transition: transform 0.3s ease-in-out; }
         .cart-slide.open { transform: translateX(0); }
-        /* Lightbox Styles */
         #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
         #lightbox.active { display: flex; }
     </style>
@@ -26,7 +28,7 @@
     <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-4 flex justify-between items-center">
         <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-purple-700">Petal Chain - The Market</h1>
         <div class="relative cursor-pointer" onclick="toggleCart()">
-            <i class="fa-solid fa-cart-shopping text-3xl text-gray-800 hover:text-purple-700 transition-colors"></i>
+            <i class="fa-solid fa-clipboard-list text-3xl text-gray-800 hover:text-purple-700 transition-colors"></i>
             <span id="cart-count" class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow">0</span>
         </div>
     </nav>
@@ -45,10 +47,8 @@
 
         <div class="flex flex-wrap gap-3 mb-8">
             <button onclick="filterCategory('all')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">All</button>
-            <button onclick="filterCategory('Deals')" class="category-btn px-5 py-2.5 rounded-full font-bold bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition">🔥 Deals</button>
-            <button onclick="filterCategory('Snacks')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Snacks</button>
-            <button onclick="filterCategory('Soda')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Soda</button>
-            <button onclick="filterCategory('Clothes')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Clothes</button>
+            <button onclick="filterCategory('Bakery')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Bakery</button>
+            <button onclick="filterCategory('Dairy')" class="category-btn px-5 py-2.5 rounded-full font-medium bg-purple-100 text-purple-800">Dairy</button>
         </div>
 
         <div id="product-container" class="product-grid"></div>
@@ -57,16 +57,14 @@
     <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto cart-slide">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Your Cart</h2>
+                <h2 class="text-2xl font-bold text-gray-900">Your Shopping List</h2>
                 <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
             <div id="cart-items" class="mb-8 space-y-4"></div>
-            <div class="border-t pt-6 space-y-3 mb-6">
-                <div class="flex justify-between"><span>Subtotal</span><span id="cart-subtotal">R0.00</span></div>
-                <div class="flex justify-between"><span>Delivery</span><span>R3.00</span></div>
-                <div class="flex justify-between text-xl font-bold"><span>Total</span><span id="cart-total">R3.00</span></div>
-                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md mt-4">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i> Confirm & Send Order
+            <div class="border-t pt-6">
+                <p class="text-sm text-gray-500 mb-4">* Send your list to confirm prices and availability.</p>
+                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md">
+                    <i class="fa-brands fa-whatsapp text-2xl"></i> Send List to Shop
                 </button>
             </div>
         </div>
@@ -80,16 +78,12 @@
     
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
-        const DELIVERY_FEE = 3.00;
 
         const products = [
-            { id: 1, name: "SASKO Brown Bread", price: 18.00, category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
-            { id: 2, name: "SASKO White Bread", price: 18.00, category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
-            //{ id: 7, name: "Combo: Chips & Dip", price: 45.00, category: "Deals", img: "https://images.unsplash.com/photo-1621447509323-9899ac4dd811?w=500" },
-            //{ id: 8, name: "Bulk Soda (6 Pack)", price: 75.00, category: "Deals", img: "https://images.unsplash.com/photo-1527960669566-f882ba85a4c6?w=500" },
-            //{ id: 9, name: "Summer Hoodie", price: 199.00, category: "Deals", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500" },
-            //{ id: 5, name: "White Oversized Tee", price: 250.00, category: "Clothes", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500" },
-            //{ id: 6, name: "Energy Drink", price: 22.00, category: "Soda", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500" }
+            { id: 1, name: "SASKO Brown Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
+            { id: 2, name: "SASKO White Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
+            { id: 3, name: "Albany Superior White", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/albanywhite.png" },
+            { id: 4, name: "Blue Band Margarine", category: "Dairy", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/blueband.png" }
         ];
 
         let cart = [];
@@ -99,23 +93,20 @@
             const container = document.getElementById('product-container');
             container.innerHTML = list.map(p => `
                 <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
-                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-40 object-cover rounded-2xl mb-4 cursor-zoom-in hover:opacity-90 transition">
-                    <p class="text-xs ${p.category === 'Deals' ? 'text-red-600' : 'text-purple-600'} font-semibold uppercase mb-1">${p.category}</p>
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-40 object-contain rounded-2xl mb-4 cursor-zoom-in hover:opacity-90 transition bg-gray-50">
+                    <p class="text-xs text-purple-600 font-semibold uppercase mb-1">${p.category}</p>
                     <h3 class="font-bold text-base mb-2 flex-grow">${p.name}</h3>
                     
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="text-xs text-gray-500 block mb-1">Quantity</label>
-                        <select id="qty-${p.id}" class="w-full bg-gray-50 border border-gray-200 rounded-lg text-sm p-1 outline-none">
-                            ${Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                        <select id="qty-${p.id}" class="w-full bg-gray-50 border border-gray-200 rounded-lg text-sm p-2 outline-none">
+                            ${Array.from({length: 10}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
                         </select>
                     </div>
 
-                    <div class="flex justify-between items-center">
-                        <span class="font-extrabold text-xl text-gray-900">R${p.price.toFixed(2)}</span>
-                        <button onclick="addToCart(${p.id})" class="bg-purple-700 text-white h-10 w-10 rounded-full flex items-center justify-center hover:bg-purple-800 shadow-md">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
+                    <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-800 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i> Add to List
+                    </button>
                 </div>
             `).join('');
         }
@@ -123,9 +114,8 @@
         function addToCart(id) {
             const product = products.find(p => p.id === id);
             const qty = parseInt(document.getElementById(`qty-${id}`).value);
-            
-            // Check if item exists in cart to update qty, else add new
             const existing = cart.find(item => item.id === id);
+            
             if(existing) {
                 existing.qty += qty;
             } else {
@@ -135,22 +125,16 @@
         }
 
         function updateUI() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const total = cart.length > 0 ? subtotal + DELIVERY_FEE : 0;
-            
             document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.qty, 0);
-            document.getElementById('cart-subtotal').innerText = `R${subtotal.toFixed(2)}`;
-            document.getElementById('cart-total').innerText = `R${total.toFixed(2)}`;
-            
             const itemsContainer = document.getElementById('cart-items');
-            itemsContainer.innerHTML = cart.length === 0 ? '<p class="text-center py-8">Empty cart</p>' : 
+            itemsContainer.innerHTML = cart.length === 0 ? '<p class="text-center py-8 text-gray-400">Your list is empty</p>' : 
                 cart.map((item, index) => `
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                <div class="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <div>
-                        <p class="font-medium">${item.name} (x${item.qty})</p>
-                        <p class="text-sm">R${(item.price * item.qty).toFixed(2)}</p>
+                        <p class="font-bold text-gray-800">${item.name}</p>
+                        <p class="text-sm text-purple-600 font-medium">Quantity: ${item.qty}</p>
                     </div>
-                    <button onclick="removeFromCart(${index})" class="text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash-can"></i></button>
                 </div>`).join('');
         }
 
@@ -161,8 +145,7 @@
             currentCategory = cat;
             document.querySelectorAll('.category-btn').forEach(btn => {
                 const isActive = btn.innerText.includes(cat) || (cat === 'all' && btn.innerText === 'All');
-                btn.classList.toggle('bg-purple-600', isActive && cat !== 'Deals');
-                btn.classList.toggle('bg-red-600', isActive && cat === 'Deals');
+                btn.classList.toggle('bg-purple-600', isActive);
                 btn.classList.toggle('text-white', isActive);
             });
             filterProducts();
@@ -182,10 +165,9 @@
         function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
 
         function sendToWhatsApp() {
-            if (cart.length === 0) return alert("Cart is empty!");
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let itemsText = cart.map(i => `• ${i.name} (x${i.qty})`).join('\n');
-            const message = `*PETAL CHAIN ORDER*\n\n*Items:*\n${itemsText}\n\n*Subtotal:* R${subtotal.toFixed(2)}\n*Delivery:* R3.00\n*TOTAL:* R${(subtotal + 3).toFixed(2)}\n\nConfirm order?`;
+            if (cart.length === 0) return alert("Add items to your list first!");
+            let itemsText = cart.map(i => `• ${i.name} (Qty: ${i.qty})`).join('\n');
+            const message = `*PETAL CHAIN SHOPPING LIST*\n\n*Items requested:*\n${itemsText}\n\nPlease let me know the prices and if these are in stock!`;
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
