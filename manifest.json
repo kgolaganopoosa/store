@@ -1,0 +1,21 @@
+{
+  "short_name": "Shakung",
+  "name": "Shop Shakung",
+  "icons": [
+    {
+      "src": "navicon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "navicon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#7e22ce",
+  "display": "standalone",
+  "scope": "./"
+}
