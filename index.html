@@ -157,6 +157,34 @@
         </div>
     </div>
 
+    <footer class="bg-white border-t border-gray-200 pt-10 pb-8 mt-auto">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h4 class="font-black text-purple-700 text-lg mb-3">Shop Shakung</h4>
+                    <p class="text-gray-500 text-sm">Providing essential goods with affordable R3.00 delivery to your community. Quality service by Petal Chain.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-900 mb-3">Information</h4>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><a href="#" onclick="alert('Privacy Policy: We protect your data and only use it for order processing.')" class="hover:text-purple-700">Privacy Policy</a></li>
+                        <li><a href="#" onclick="alert('Terms of Use: Delivery is restricted to service zones. Prices are subject to stock availability.')" class="hover:text-purple-700">Terms of Use</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-900 mb-3">Contact Us</h4>
+                    <a href="https://wa.me/27646575290" class="flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
+                        <span>WhatsApp Support</span>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-100 pt-6 text-center">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">&copy; 2026 Petal Chain. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
         const DELIVERY_FEE = "R3.00";
@@ -191,10 +219,10 @@
         };
 
         const products = [
-            { id: 1, name: "SASKO Brown Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
-            { id: 2, name: "SASKO White Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
-            { id: 3, name: "Parafin", category: "Fluid", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/albanywhite.png" },
-            { id: 4, name: "Blue Band Margarine", category: "Dairy", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/blueband.png" }
+            { id: 1, name: "SASKO Brown Bread", price: 18.50, category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
+            { id: 2, name: "SASKO White Bread", price: 21.00, category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
+            { id: 3, name: "Parafin (1L)", price: 25.00, category: "Fluid", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/albanywhite.png" },
+            { id: 4, name: "Blue Band Margarine", price: 35.00, category: "Dairy", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/blueband.png" }
         ];
 
         let cart = [];
@@ -269,6 +297,7 @@
                     <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-40 object-contain rounded-2xl mb-4 cursor-zoom-in bg-gray-50">
                     <p class="text-xs text-purple-600 font-semibold mb-1">${p.category}</p>
                     <h3 class="font-bold text-base mb-1">${p.name}</h3>
+                    <p class="text-lg font-black text-gray-900 mb-2">R${p.price.toFixed(2)}</p>
                     <p class="text-[10px] text-gray-400 uppercase tracking-wide font-bold mb-2">Select Quantity</p>
                     <select id="qty-${p.id}" class="w-full bg-gray-50 border rounded-lg text-sm p-2 outline-none mb-3">
                         ${getQtyOptions(1)}
@@ -315,6 +344,7 @@
                     <img src="${item.img}" class="w-14 h-14 object-contain bg-white rounded-lg border border-gray-200">
                     <div class="flex-grow">
                         <p class="font-bold text-gray-800 text-sm leading-tight">${item.name}</p>
+                        <p class="text-xs font-bold text-purple-600 mt-0.5">R${(item.price * item.qty).toFixed(2)}</p>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-[10px] text-gray-500 font-bold uppercase">Qty:</span>
                             <select onchange="changeCartQty(${index}, this.value)" class="bg-white border rounded text-xs px-1 py-0.5 outline-none focus:ring-1 focus:ring-purple-400">
@@ -334,8 +364,9 @@
         
         function sendToWhatsApp() {
             if (cart.length === 0) return alert("Add items first!");
-            let itemsText = cart.map(i => `• ${i.name} (Qty: ${i.qty})`).join('\n');
-            const message = `*PETAL CHAIN SHOPPING LIST*\n\n${itemsText}\n\n*Delivery Fee:* ${DELIVERY_FEE}\n*Total Items:* ${cart.reduce((s, i) => s + i.qty, 0)}`;
+            let itemsText = cart.map(i => `• ${i.name} (Qty: ${i.qty}) - R${(i.price * i.qty).toFixed(2)}`).join('\n');
+            let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const message = `*PETAL CHAIN SHOPPING LIST*\n\n${itemsText}\n\n*Subtotal:* R${subtotal.toFixed(2)}\n*Delivery Fee:* ${DELIVERY_FEE}\n*Total Items:* ${cart.reduce((s, i) => s + i.qty, 0)}`;
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
