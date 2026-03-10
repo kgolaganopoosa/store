@@ -6,8 +6,8 @@
     <title>Shop Shakung</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="navicon.png" type="image/x-icon">
+    <link rel="icon" href="navicon.png" type="image/x-icon">
 
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
@@ -27,8 +27,16 @@
     </div>
 
     <div id="shop-view">
-        <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-purple-700">Shop Shakung</h1>
+        <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-700 shadow-sm">
+                  <img src="navicon.png" width="65%" height="65%">
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tight text-purple-700 leading-none">Shop Shakung</h1>
+                    <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">An operation by Petal Chain</p>
+                </div>
+            </div>
             
             <div class="flex items-center gap-3">
                 <button onclick="openLogin()" class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center shadow-sm hover:bg-gray-200 transition">
@@ -45,7 +53,7 @@
         <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-10 px-6 text-center">
             <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling, start shopping!</h2>
             <p class="text-lg md:text-xl opacity-90">Fresh picks delivered fast.</p>
-            <p class="text-lg md:text-xl opacity-90">Delivery only R3.</p>
+            <p class="text-lg md:text-xl font-bold mt-2">Delivery only R3.</p>
         </header>
 
         <div class="max-w-6xl mx-auto px-4 py-6">
@@ -71,18 +79,28 @@
         </nav>
         
         <div class="max-w-2xl mx-auto p-6">
-            <div id="card-theme" class="rounded-3xl p-8 text-white mb-8 shadow-xl">
-                <p id="account-tier" class="text-sm font-medium uppercase tracking-wider mb-1">Available Balance</p>
-                <h3 class="text-5xl font-black mb-4"><span id="display-balance">0.00</span> <span class="text-2xl font-normal">sc</span></h3>
+            <div id="card-theme" class="rounded-3xl p-8 text-white mb-4 shadow-xl">
+                <div class="flex justify-between items-start mb-1">
+                    <p id="account-tier" class="text-xs font-medium uppercase tracking-wider">Member Tier</p>
+                    <p id="owner-initials" class="text-sm font-bold opacity-90"></p>
+                </div>
+                <p class="text-xs opacity-75 mb-1">Available Balance</p>
+                <h3 class="text-5xl font-black mb-4"><span id="display-balance">0.00</span> <span class="text-2xl font-normal">SS</span></h3>
                 <div class="flex justify-between items-end">
-                    <p id="account-number" class="text-xs opacity-75"></p>
-                    <div id="status-tag" class="bg-white/20 px-3 py-1 rounded-lg text-xs">Member</div>
+                    <p id="account-number" class="text-xs opacity-75 font-mono"></p>
+                    <div id="status-tag" class="bg-white/20 px-3 py-1 rounded-lg text-xs">Verified</div>
                 </div>
             </div>
 
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-8 rounded-r-xl">
+                <p class="text-blue-700 text-xs font-bold">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    ShakScore 'SS' is equivalent to South Africa Rand (R/ZAR)
+                </p>
+            </div>
+
             <h3 class="font-bold text-lg mb-4">Detailed Statement</h3>
-            <div id="statement-list" class="space-y-4">
-                </div>
+            <div id="statement-list" class="space-y-4"></div>
             
             <button onclick="closeRewards()" class="w-full mt-8 py-4 bg-gray-900 text-white rounded-2xl font-bold">Back to Shopping</button>
         </div>
@@ -110,7 +128,14 @@
                 <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
             <div id="cart-items" class="mb-8 space-y-4"></div>
+            
             <div class="border-t pt-6">
+                <div id="cart-summary" class="mb-4 hidden">
+                    <div class="flex justify-between text-gray-600 font-bold">
+                        <span>Delivery Fee:</span>
+                        <span>R3.00</span>
+                    </div>
+                </div>
                 <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md">
                     <i class="fa-brands fa-whatsapp text-2xl"></i> Send List to Shop
                 </button>
@@ -120,11 +145,12 @@
 
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
+        const DELIVERY_FEE = "R3.00";
 
-        // Account Data Object
         const ACCOUNTS = {
             "1234": {
                 name: "Petal Chain Rewards",
+                owner: "S. Khumalo",
                 balance: "100.00",
                 acc: "SHAK-8821-XP",
                 tier: "Gold Member",
@@ -137,6 +163,7 @@
             },
             "0001": {
                 name: "Shak Executive",
+                owner: "T. Mokoena",
                 balance: "250.00",
                 acc: "EXEC-0001-SH",
                 tier: "Platinum Plus",
@@ -190,20 +217,20 @@
             document.getElementById('display-balance').innerText = acc.balance;
             document.getElementById('account-number').innerText = "Account: " + acc.acc;
             document.getElementById('status-tag').innerText = acc.tier;
-            
-            // Set Theme
-            const card = document.getElementById('card-theme');
-            card.className = `bg-gradient-to-br ${acc.theme} rounded-3xl p-8 text-white mb-8 shadow-xl`;
+            document.getElementById('owner-initials').innerText = acc.owner;
+            document.getElementById('account-tier').innerText = acc.tier;
 
-            // Set Statement
+            const card = document.getElementById('card-theme');
+            card.className = `bg-gradient-to-br ${acc.theme} rounded-3xl p-8 text-white mb-4 shadow-xl`;
+            
             const list = document.getElementById('statement-list');
             list.innerHTML = acc.history.map(item => `
                 <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
                     <div>
-                        <p class="font-bold">${item.desc}</p>
-                        <p class="text-xs text-gray-500">${item.date}</p>
+                        <p class="font-bold text-sm">${item.desc}</p>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold">${item.date}</p>
                     </div>
-                    <p class="${item.color} font-bold">${item.amt}sc</p>
+                    <p class="${item.color} font-black text-sm">${item.amt} SS</p>
                 </div>
             `).join('');
         }
@@ -213,15 +240,24 @@
             document.getElementById('shop-view').classList.remove('hidden-view');
         }
 
+        function getQtyOptions(selected) {
+            let options = "";
+            for (let i = 1; i <= 24; i++) {
+                options += `<option value="${i}" ${selected == i ? 'selected' : ''}>${i}</option>`;
+            }
+            return options;
+        }
+
         function renderProducts(list = products) {
             const container = document.getElementById('product-container');
             container.innerHTML = list.map(p => `
                 <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
                     <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-40 object-contain rounded-2xl mb-4 cursor-zoom-in bg-gray-50">
                     <p class="text-xs text-purple-600 font-semibold mb-1">${p.category}</p>
-                    <h3 class="font-bold text-base mb-2 flex-grow">${p.name}</h3>
+                    <h3 class="font-bold text-base mb-1">${p.name}</h3>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wide font-bold mb-2">Select Quantity</p>
                     <select id="qty-${p.id}" class="w-full bg-gray-50 border rounded-lg text-sm p-2 outline-none mb-3">
-                        ${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}
+                        ${getQtyOptions(1)}
                     </select>
                     <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-xl font-bold hover:bg-purple-800 transition">Add to List</button>
                 </div>
@@ -230,21 +266,51 @@
 
         function addToCart(id) {
             const product = products.find(p => p.id === id);
-            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const qtyInput = document.getElementById(`qty-${id}`);
+            const qty = parseInt(qtyInput.value);
             const existing = cart.find(item => item.id === id);
-            if(existing) { existing.qty += qty; } else { cart.push({ ...product, qty: qty }); }
+            
+            if(existing) { 
+                existing.qty += qty; 
+                if(existing.qty > 24) existing.qty = 24; 
+            } else { 
+                cart.push({ ...product, qty: qty }); 
+            }
+            
+            qtyInput.value = "1";
+            updateUI();
+        }
+
+        function changeCartQty(index, newQty) {
+            cart[index].qty = parseInt(newQty);
             updateUI();
         }
 
         function updateUI() {
             document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.qty, 0);
             const itemsContainer = document.getElementById('cart-items');
-            itemsContainer.innerHTML = cart.length === 0 ? '<p class="text-center py-8 text-gray-400">Empty</p>' : 
-                cart.map((item, index) => `
-                <div class="flex justify-between items-center bg-gray-50 p-4 rounded-xl">
-                    <div><p class="font-bold text-gray-800">${item.name}</p><p class="text-sm">Qty: ${item.qty}</p></div>
-                    <button onclick="removeFromCart(${index})" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+            const summary = document.getElementById('cart-summary');
+            
+            if(cart.length === 0) {
+                itemsContainer.innerHTML = '<p class="text-center py-8 text-gray-400 font-medium">Your list is empty</p>';
+                summary.classList.add('hidden');
+            } else {
+                summary.classList.remove('hidden');
+                itemsContainer.innerHTML = cart.map((item, index) => `
+                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <img src="${item.img}" class="w-14 h-14 object-contain bg-white rounded-lg border border-gray-200">
+                    <div class="flex-grow">
+                        <p class="font-bold text-gray-800 text-sm leading-tight">${item.name}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase">Qty:</span>
+                            <select onchange="changeCartQty(${index}, this.value)" class="bg-white border rounded text-xs px-1 py-0.5 outline-none focus:ring-1 focus:ring-purple-400">
+                                ${getQtyOptions(item.qty)}
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
                 </div>`).join('');
+            }
         }
 
         function removeFromCart(i) { cart.splice(i, 1); updateUI(); }
@@ -255,8 +321,19 @@
         function sendToWhatsApp() {
             if (cart.length === 0) return alert("Add items first!");
             let itemsText = cart.map(i => `• ${i.name} (Qty: ${i.qty})`).join('\n');
-            const message = `*PETAL CHAIN SHOPPING LIST*\n\n${itemsText}`;
+            const message = `*PETAL CHAIN SHOPPING LIST*\n\n${itemsText}\n\n*Delivery Fee:* ${DELIVERY_FEE}\n*Total Items:* ${cart.reduce((s, i) => s + i.qty, 0)}`;
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            renderProducts(filtered);
+        }
+
+        function filterCategory(cat) {
+            const filtered = cat === 'all' ? products : products.filter(p => p.category === cat);
+            renderProducts(filtered);
         }
 
         renderProducts();
