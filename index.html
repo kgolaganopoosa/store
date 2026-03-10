@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop Shakung</title>
+    
+    <meta name="theme-color" content="#7e22ce">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shop Shakung">
+    
+    <link rel="apple-touch-icon" href="navicon.jpg">
+    <link rel="icon" href="navicon.jpg" type="image/x-icon">
+    
+    <link rel="manifest" href="manifest.json">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="shortcut icon" href="navicon.jpg" type="image/x-icon">
-    <link rel="icon" href="navicon.jpg" type="image/x-icon">
 
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
@@ -17,6 +27,10 @@
         #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
         #lightbox.active { display: flex; }
         .hidden-view { display: none; }
+        
+        /* Smooth scrolling for mobile app feel */
+        html { scroll-behavior: smooth; }
+        body { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
@@ -30,7 +44,7 @@
         <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-700 shadow-sm">
-                  <img src="navicon.png" width="65%" height="65%">
+                  <img src="navicon.jpg" width="65%" height="65%" style="border-radius: 4px;">
                 </div>
                 <div>
                     <h1 class="text-xl md:text-2xl font-black tracking-tight text-purple-700 leading-none">Shop Shakung</h1>
@@ -338,6 +352,15 @@
 
         renderProducts();
         updateUI();
+
+        // --- SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA Ready'))
+                    .catch(err => console.log('PWA Registration failed'));
+            });
+        }
     </script>
 </body>
 </html>
