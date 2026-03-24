@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Shakung</title>
+    
+    <meta name="theme-color" content="#7e22ce">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shop Shakung">
+    
+    <link rel="apple-touch-icon" href="navicon.jpg">
+    <link rel="icon" href="navicon.jpg" type="image/x-icon">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+        @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+        
+        /* Skeleton Shimmer */
+        .skeleton { background: #eee; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); border-radius: 20px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
+        @keyframes shine { to { background-position-x: -200%; } }
+
+        /* Toast Styles */
+        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; width: 90%; max-width: 400px; }
+        .toast { background: #1a1a1a; color: white; padding: 14px 24px; border-radius: 50px; font-weight: bold; font-size: 14px; margin-top: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-green { border-left: 5px solid #22c55e; }
+
+        .cart-slide { transform: translateX(100%); transition: transform 0.3s ease-in-out; }
+        .cart-slide.open { transform: translateX(0); }
+        .hidden-view { display: none; }
+        
+        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        #lightbox.active { display: flex; }
+        
+        html { scroll-behavior: smooth; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .category-btn.active { background-color: #7e22ce; color: white; border-color: #7e22ce; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+
+    <div id="toast-container"></div>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl">
+    </div>
+
+    <div id="shop-view">
+        <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-700 overflow-hidden shadow-sm">
+                  <img src="navicon.jpg" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40?text=S'">
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tight text-purple-700 leading-none">Shop Shakung</h1>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">By Petal Chain</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button id="user-btn" onclick="handleAuthClick()" class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center shadow-sm hover:bg-gray-200 transition">
+                    <i class="fa-solid fa-circle-user mr-2 text-gray-500"></i>
+                    <span id="user-btn-text" class="font-bold text-gray-600 text-sm">Login</span>
+                </button>
+
+                <div class="relative cursor-pointer" onclick="toggleCart()">
+                    <i class="fa-solid fa-clipboard-list text-3xl text-gray-800 hover:text-purple-700 transition-colors"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow">0</span>
+                </div>
+            </div>
+        </nav>
+
+        <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-12 px-6 text-center">
+            <h2 id="welcome-msg" class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling,</h2>
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">start shopping!</h2>
+        </header>
+
+        <div class="max-w-6xl mx-auto px-4 py-8">
+            <div class="relative mb-6">
+                <input id="searchInput" type="text" placeholder="Search for products..." class="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" oninput="runSearch()">
+                <i class="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-6">
+                <button onclick="filterByCategory('All')" class="category-btn active whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">All</button>
+                <button onclick="filterByCategory('Bakery')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Bakery</button>
+                <button onclick="filterByCategory('Dairy')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Dairy</button>
+                <button onclick="filterByCategory('Pantry')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Pantry</button>
+                <button onclick="filterByCategory('Snacks')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Snacks</button>
+            </div>
+
+            <div id="product-container" class="product-grid">
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rewards-view" class="hidden-view min-h-screen bg-white">
+        <nav class="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <button onclick="closeRewards()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-xl font-bold">My Rewards</h2>
+            </div>
+            <button onclick="logout()" class="text-red-500 font-bold text-sm bg-red-50 px-4 py-1.5 rounded-full">Logout</button>
+        </nav>
+        <div class="max-w-2xl mx-auto p-6">
+            <div id="card-theme" class="rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden">
+                <p id="account-tier" class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Gold Member</p>
+                <h3 class="text-5xl font-black mb-6"><span id="display-balance">0.00</span> <span class="text-2xl font-normal">SS</span></h3>
+                <p id="customer-id-display" class="text-sm font-mono font-bold"></p>
+                <p id="owner-name" class="text-sm font-bold opacity-90"></p>
+            </div>
+            <h3 class="font-bold text-lg mb-4">Detailed Statement</h3>
+            <div id="statement-list" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="legal-view" class="hidden-view min-h-screen bg-white">
+        <nav class="p-4 border-b flex items-center gap-4 bg-white sticky top-0 z-50">
+            <button onclick="closeLegal()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="legal-title" class="text-xl font-bold">Legal</h2>
+        </nav>
+        <div class="max-w-3xl mx-auto p-6 text-gray-600 leading-relaxed text-sm" id="legal-content"></div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 bg-black/60 z-[1000] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl">
+            <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-lock text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Secure Login</h3>
+            <p class="text-gray-500 text-sm mb-6">Enter your 4-digit PIN to checkout.</p>
+            <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="w-32 text-center text-4xl border-b-4 border-purple-500 outline-none mb-10 pb-2 font-mono">
+            <div class="flex gap-3">
+                <button onclick="closeLogin()" class="flex-1 py-4 text-gray-500 font-bold">Cancel</button>
+                <button onclick="verifyPin()" class="flex-1 py-4 bg-purple-700 text-white rounded-2xl font-bold">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl z-[100] overflow-y-auto cart-slide flex flex-col">
+        <div class="p-6 flex justify-between items-center border-b">
+            <h2 class="text-2xl font-bold text-gray-900">Your List</h2>
+            <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-800 text-4xl">&times;</button>
+        </div>
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+        <div class="p-6 border-t bg-gray-50">
+            <div id="cart-summary" class="mb-4 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="clearCart()" class="text-red-500 text-xs font-bold uppercase tracking-widest bg-red-50 px-3 py-1 rounded-lg">Clear List</button>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">Total (Inc. R15 Fee)</p>
+                        <p id="total-display" class="text-xl font-black text-purple-700">R0.00</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg group">
+                <i id="lock-icon" class="fa-solid fa-lock text-sm opacity-50"></i>
+                <i class="fa-brands fa-whatsapp text-2xl"></i> Send to WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 pt-12 pb-8 mt-auto">
+        <div class="max-w-6xl mx-auto px-6 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10">
+                <div>
+                    <h4 class="font-black text-purple-700 text-xl mb-4">Shop Shakung</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">Neighborhood groceries powered by Petal Chain.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-900 mb-4">Legal</h4>
+                    <ul class="text-sm text-gray-600 space-y-3">
+                        <li><button onclick="showPrivacy()" class="hover:text-purple-700 font-medium">Privacy Policy</button></li>
+                        <li><button onclick="showTerms()" class="hover:text-purple-700 font-medium">Terms of Use</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-900 mb-4">Support</h4>
+                    <a href="https://wa.me/27646575290" class="text-green-600 font-bold hover:underline underline-offset-4">WhatsApp Helpdesk</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const WHATSAPP_NUMBER = "27646575290"; 
+        const DELIVERY_FEE = 15.00;
+        let currentCategory = 'All';
+
+        const ACCOUNTS = {
+            "1234": { id: "SHAK-2026-001", firstName: "Kgolagano", fullName: "Kgolagano P.", balance: "250.00", tier: "Gold Member", theme: "from-purple-700 to-indigo-800", history: [{ desc: "Loyalty Bonus", date: "Mar 22, 2026", amt: "+50.00", color: "text-green-600" }] }
+        };
+
+        const PRODUCTS = [
+            { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
+            { id: 2, name: "SASKO White Bread", category: "Bakery", price: 17.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
+            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", price: 34.00, img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" },
+            { id: 12, name: "First Choice Milk (1L)", category: "Dairy", price: 18.00, img: "https://firstchoice.co.za/wp-content/uploads/2020/06/FC_UHT_FullCream_1L.png" },
+            { id: 13, name: "Simba Chutney Chips (120g)", category: "Snacks", price: 19.00, img: "https://simba.co.za/assets/images/products/simba-mrs-hs-balls-chutney.png" }
+        ];
+
+        let currentUser = null;
+        let cart = JSON.parse(localStorage.getItem('shak_cart')) || [];
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-green`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 2500);
+        }
+
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat));
+            renderProducts();
+        }
+
+        function runSearch() { renderProducts(); }
+
+        function renderProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = PRODUCTS.filter(p => (currentCategory === 'All' || p.category === currentCategory) && p.name.toLowerCase().includes(query));
+            const container = document.getElementById('product-container');
+            container.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full animate-in fade-in duration-500">
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-4 bg-gray-50 p-2 cursor-zoom-in">
+                    <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
+                    <h3 class="font-bold text-xs mb-1 h-8 line-clamp-2">${p.name}</h3>
+                    <p class="text-purple-700 font-black text-lg mb-3">R${p.price.toFixed(2)}</p>
+                    <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add to List</button>
+                </div>`).join('');
+        }
+
+        function addToCart(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+            cart.push({...product, qty: 1});
+            localStorage.setItem('shak_cart', JSON.stringify(cart));
+            updateUI();
+            showToast(`${product.name} added to list!`);
+        }
+
+        function updateUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const subtotal = cart.reduce((s, i) => s + i.price, 0);
+            const summary = document.getElementById('cart-summary');
+            if(cart.length > 0) {
+                summary.classList.remove('hidden');
+                document.getElementById('total-display').innerText = `R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            } else { summary.classList.add('hidden'); }
+            
+            document.getElementById('cart-items').innerHTML = cart.map((item, index) => `
+                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
+                    <img src="${item.img}" class="w-10 h-10 object-contain bg-white rounded-lg p-1">
+                    <div class="flex-grow"><p class="font-bold text-[11px]">${item.name}</p><p class="text-purple-600 font-black text-[10px]">R${item.price.toFixed(2)}</p></div>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 p-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                </div>`).join('');
+        }
+
+        function clearCart() { if(confirm("Clear your entire list?")) { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); } }
+        function removeFromCart(index) { cart.splice(index, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
+
+        function sendToWhatsApp() {
+            if(!currentUser) { toggleCart(); openLogin(); return; }
+            if(cart.length === 0) return;
+            const subtotal = cart.reduce((s, i) => s + i.price, 0);
+            const items = cart.map(i => `• ${i.name}`).join('\n');
+            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\n----------------------\n${items}\n----------------------\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
+        }
+
+        function showPrivacy() {
+            document.getElementById('legal-title').innerText = "Privacy Policy";
+            document.getElementById('legal-content').innerHTML = `
+                <h3 class="font-bold text-gray-800 mb-2">1. Data Collection</h3>
+                <p class="mb-4">Shop Shakung, an operation by Petal Chain, collects minimal data including your name and unique Customer ID associated with your 4-digit PIN.</p>
+                <h3 class="font-bold text-gray-800 mb-2">2. Usage</h3>
+                <p class="mb-4">Your data is used solely to facilitate WhatsApp orders and track ShakScore rewards. We do not sell your data to third parties.</p>
+                <h3 class="font-bold text-gray-800 mb-2">3. Storage</h3>
+                <p class="mb-4">Cart data is stored locally on your device. Account information is managed via Petal Chain's secure internal protocols.</p>`;
+            openLegal();
+        }
+
+        function showTerms() {
+            document.getElementById('legal-title').innerText = "Terms of Use";
+            document.getElementById('legal-content').innerHTML = `
+                <h3 class="font-bold text-gray-800 mb-2">1. Orders</h3>
+                <p class="mb-4">Orders placed via WhatsApp are subject to product availability and confirmation by Shop Shakung staff.</p>
+                <h3 class="font-bold text-gray-800 mb-2">2. Delivery</h3>
+                <p class="mb-4">A standard delivery fee of R15.00 applies to all orders within the Shakung region unless specified otherwise.</p>
+                <h3 class="font-bold text-gray-800 mb-2">3. ShakScore</h3>
+                <p class="mb-4">ShakScore (SS) points have no cash value outside the Petal Chain ecosystem and can only be redeemed for discounts on Shop Shakung.</p>`;
+            openLegal();
+        }
+
+        function handleAuthClick() { if (currentUser) { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('rewards-view').classList.remove('hidden-view'); } else { openLogin(); } }
+        function openLogin() { document.getElementById('login-modal').classList.replace('hidden', 'flex'); }
+        function closeLogin() { document.getElementById('login-modal').classList.replace('flex', 'hidden'); }
+        function verifyPin() { const pin = document.getElementById('pin-input').value; if(ACCOUNTS[pin]) { currentUser = ACCOUNTS[pin]; updateAuthUI(); closeLogin(); showToast("Welcome back!"); } else { alert("Wrong PIN"); } }
+        function logout() { currentUser = null; updateAuthUI(); closeRewards(); }
+        function updateAuthUI() { 
+            document.getElementById('user-btn-text').innerText = currentUser ? currentUser.firstName : "Login"; 
+            document.getElementById('lock-icon').className = currentUser ? "fa-solid fa-check-circle text-sm opacity-50" : "fa-solid fa-lock text-sm opacity-50";
+        }
+
+        function openLegal() { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('legal-view').classList.remove('hidden-view'); }
+        function closeLegal() { document.getElementById('legal-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
+        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
+        function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
+        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+
+        setTimeout(() => renderProducts(), 1200);
+        updateUI();
+    </script>
+</body>
+</html>
