@@ -35,8 +35,6 @@
 
         html { scroll-behavior: smooth; }
         body { -webkit-tap-highlight-color: transparent; }
-        
-        /* Custom scrollbar for categories */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -63,8 +61,9 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="openLogin()" class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center shadow-sm hover:bg-gray-200 transition">
-                    <span class="font-bold text-gray-600 text-sm">Credits</span>
+                <button id="user-btn" onclick="handleAuthClick()" class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center shadow-sm hover:bg-gray-200 transition">
+                    <i class="fa-solid fa-circle-user mr-2 text-gray-500"></i>
+                    <span id="user-btn-text" class="font-bold text-gray-600 text-sm">Login</span>
                 </button>
 
                 <div class="relative cursor-pointer" onclick="toggleCart()">
@@ -75,7 +74,7 @@
         </nav>
 
         <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-10 px-6 text-center">
-            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling,</h2>
+            <h2 id="welcome-msg" class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling,</h2>
             <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">start shopping!</h2>
             <p class="text-lg md:text-xl opacity-90">Fresh picks delivered fast.</p>
         </header>
@@ -100,21 +99,27 @@
     </div>
 
     <div id="rewards-view" class="hidden-view min-h-screen bg-white">
-        <nav class="p-4 border-b flex items-center gap-4">
-            <button onclick="closeRewards()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
-            <h2 id="view-title" class="text-xl font-bold">My Rewards</h2>
+        <nav class="p-4 border-b flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="closeRewards()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 id="view-title" class="text-xl font-bold">My Rewards</h2>
+            </div>
+            <button onclick="logout()" class="text-red-500 font-bold text-sm">Logout</button>
         </nav>
         
         <div class="max-w-2xl mx-auto p-6">
             <div id="card-theme" class="rounded-3xl p-8 text-white mb-4 shadow-xl">
                 <div class="flex justify-between items-start mb-1">
                     <p id="account-tier" class="text-xs font-medium uppercase tracking-wider">Member Tier</p>
-                    <p id="owner-initials" class="text-sm font-bold opacity-90"></p>
+                    <p id="owner-name" class="text-sm font-bold opacity-90"></p>
                 </div>
                 <p class="text-xs opacity-75 mb-1">Available Balance</p>
                 <h3 class="text-5xl font-black mb-4"><span id="display-balance">0.00</span> <span class="text-2xl font-normal">SS</span></h3>
                 <div class="flex justify-between items-end">
-                    <p id="account-number" class="text-xs opacity-75 font-mono"></p>
+                    <div>
+                        <p class="text-[10px] opacity-60 uppercase font-bold">Customer ID</p>
+                        <p id="customer-id-display" class="text-sm font-mono font-bold"></p>
+                    </div>
                     <div id="status-tag" class="bg-white/20 px-3 py-1 rounded-lg text-xs">Verified</div>
                 </div>
             </div>
@@ -134,12 +139,12 @@
     </div>
 
     <div id="login-modal" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl">
+        <div class="bg-white rounded-3xl p-8 w-full max-sm text-center shadow-2xl">
             <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-lock text-2xl"></i>
             </div>
             <h3 class="text-xl font-bold mb-2">Secure Login</h3>
-            <p class="text-gray-500 text-sm mb-6">Enter your 4-digit PIN</p>
+            <p class="text-gray-500 text-sm mb-6">Enter your 4-digit PIN to checkout</p>
             <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="w-32 text-center text-3xl tracking-widest border-b-2 border-purple-500 outline-none mb-8 pb-2 font-mono">
             <div class="flex gap-3">
                 <button onclick="closeLogin()" class="flex-1 py-3 text-gray-500 font-bold">Cancel</button>
@@ -151,271 +156,245 @@
     <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 overflow-y-auto cart-slide">
         <div class="p-6 flex flex-col h-full">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Your Shopping List</h2>
+                <h2 class="text-2xl font-bold text-gray-900">Your List</h2>
                 <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
             
-            <div id="cart-items" class="flex-grow overflow-y-auto mb-8 space-y-4"></div>
+            <div id="cart-items" class="flex-grow overflow-y-auto mb-4 space-y-4"></div>
             
-            <div class="border-t pt-6">
+            <div class="border-t pt-4">
                 <div id="cart-summary" class="mb-4 hidden">
+                    <div class="space-y-2 mb-6 text-sm">
+                        <div class="flex justify-between text-gray-500">
+                            <span>Subtotal</span>
+                            <span id="subtotal-display" class="font-bold">R0.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500">
+                            <span>Delivery Fee</span>
+                            <span id="delivery-display" class="font-bold">R15.00</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-black text-purple-700 pt-2 border-t">
+                            <span>Total</span>
+                            <span id="total-display">R0.00</span>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-3 mb-4">
                         <button onclick="copyListToClipboard()" class="bg-gray-100 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition">
-                            <i class="fa-solid fa-copy"></i> Copy List
+                            <i class="fa-solid fa-copy"></i> Copy
                         </button>
                         <button onclick="clearCart()" class="bg-red-50 text-red-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition">
-                            <i class="fa-solid fa-trash-can"></i> Clear List
+                            <i class="fa-solid fa-trash-can"></i> Clear
                         </button>
                     </div>
                 </div>
-                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md">
-                    <i class="fa-brands fa-whatsapp text-2xl"></i> Send to WhatsApp
+                
+                <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-95 shadow-md group">
+                    <i id="lock-icon" class="fa-solid fa-lock text-sm opacity-50 mr-1"></i>
+                    <i class="fa-brands fa-whatsapp text-2xl"></i> 
+                    <span>Send to WhatsApp</span>
                 </button>
+                <p id="login-reminder" class="text-center text-[10px] text-gray-400 font-bold uppercase mt-2">Login required to finalize order</p>
             </div>
         </div>
     </div>
 
-    <footer class="bg-white border-t border-gray-200 pt-10 pb-8 mt-auto">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                    <h4 class="font-black text-purple-700 text-lg mb-3">Shop Shakung</h4>
-                    <p class="text-gray-500 text-sm">Providing essential goods to your community. Quality service by Petal Chain.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-900 mb-3">Information</h4>
-                    <ul class="text-sm text-gray-600 space-y-2">
-                        <li><a href="#" onclick="alert('Privacy Policy: We protect your data and only use it for order processing.')" class="hover:text-purple-700">Privacy Policy</a></li>
-                        <li><a href="#" onclick="alert('Terms of Use: Delivery is restricted to service zones. Products are subject to stock availability.')" class="hover:text-purple-700">Terms of Use</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-900 mb-3">Contact Us</h4>
-                    <a href="https://wa.me/27646575290" class="flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition">
-                        <i class="fa-brands fa-whatsapp text-xl"></i>
-                        <span>WhatsApp Support</span>
-                    </a>
-                </div>
-            </div>
-            <div class="border-t border-gray-100 pt-6 text-center">
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">&copy; 2026 Petal Chain. All Rights Reserved.</p>
-            </div>
-        </div>
-    </footer>
-
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
+        const DELIVERY_FEE = 15.00;
 
         const ACCOUNTS = {
             "1234": {
-                name: "Petal Chain Rewards", owner: "S. Khumalo", balance: "100.00", acc: "SHAK-8821-XP", tier: "Gold Member", theme: "from-purple-700 to-indigo-800",
+                id: "SHAK-2026-001",
+                firstName: "Kgolagano",
+                fullName: "Kgolagano P.",
+                balance: "150.00",
+                tier: "Gold Member",
+                theme: "from-purple-700 to-indigo-800",
                 history: [
-                    { desc: "Weekly Bonus", date: "Mar 08, 2026", amt: "+10.00", color: "text-green-600" },
-                    { desc: "Order #9921", date: "Mar 05, 2026", amt: "-25.50", color: "text-red-600" },
-                    { desc: "Initial Deposit", date: "Feb 20, 2026", amt: "+115.50", color: "text-green-600" }
+                    { desc: "Loyalty Bonus", date: "Mar 22, 2026", amt: "+50.00", color: "text-green-600" },
+                    { desc: "Grocery Order", date: "Mar 15, 2026", amt: "-120.50", color: "text-red-600" }
                 ]
             }
         };
 
-        const products = [
-            // BAKERY
-            { id: 1, name: "SASKO Brown Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
-            { id: 2, name: "SASKO White Bread", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
-            { id: 3, name: "Albany Superior White", category: "Bakery", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/albanywhite.png" },
-            
-            // PANTRY STAPLES
-            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" },
-            { id: 5, name: "Koo Baked Beans (410g)", category: "Pantry", img: "https://www.koo.co.za/pantry/baked-beans-in-tomato-sauce.png" },
-            { id: 6, name: "Lucky Star Pilchards", category: "Pantry", img: "https://luckystar.co.za/wp-content/uploads/2020/03/LS-Pilchards-Tomato.png" },
-            { id: 7, name: "Imana Soya Mince (Beef)", category: "Pantry", img: "https://imana.co.za/wp-content/uploads/2021/04/Imana-Soya-Mince-Savory-Beef.png" },
-            { id: 8, name: "Joko Tea Bags (100s)", category: "Pantry", img: "https://joko.co.za/wp-content/uploads/2020/09/Joko-100s.png" },
-            { id: 9, name: "Ricoffy (250g)", category: "Pantry", img: "https://www.nestle-creativestudio.com/sites/default/files/2021-08/Ricoffy_250g.png" },
-            { id: 10, name: "Sugar (1kg) - Selati", category: "Pantry", img: "https://selati.co.za/wp-content/uploads/2019/07/selati-white-sugar-1kg.png" },
-
-            // DAIRY
-            { id: 11, name: "Blue Band Margarine", category: "Dairy", img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/blueband.png" },
-            { id: 12, name: "First Choice Full Cream Milk (1L)", category: "Dairy", img: "https://firstchoice.co.za/wp-content/uploads/2020/06/FC_UHT_FullCream_1L.png" },
-
-            // SNACKS & TREATS
-            { id: 13, name: "Simba Chutney Chips", category: "Snacks", img: "https://simba.co.za/assets/images/products/simba-mrs-hs-balls-chutney.png" },
-            { id: 14, name: "NikNaks Cheese (135g)", category: "Snacks", img: "https://niknaks.co.za/wp-content/uploads/2021/05/NikNaks-Original-Cheese.png" },
-            { id: 15, name: "Chappies Bubblegum (Single)", category: "Snacks", img: "https://mondelēzinternational.com/images/chappies-fruit.png" },
-            { id: 16, name: "Coo-ee Iron Brew (2L)", category: "Snacks", img: "https://cooee.co.za/wp-content/uploads/2022/01/Cooee-2L-Iron-Brew.png" },
-
-            // HOUSEHOLD & FUELS
-            { id: 17, name: "Parafin (1L Bottle)", category: "Household", img: "https://via.placeholder.com/300?text=Paraffin+1L" },
-            { id: 18, name: "Sunlight Laundry Soap (500g)", category: "Household", img: "https://sunlight.co.za/wp-content/uploads/2020/05/Sunlight-Green-Bar.png" },
-            { id: 19, name: "Candles (Pack of 6)", category: "Household", img: "https://via.placeholder.com/300?text=White+Candles" }
-        ];
-
+        let currentUser = null;
         let cart = JSON.parse(localStorage.getItem('shak_cart')) || [];
 
         function saveCart() { localStorage.setItem('shak_cart', JSON.stringify(cart)); }
 
+        // AUTH & NAVIGATION
+        function handleAuthClick() {
+            if (currentUser) {
+                document.getElementById('shop-view').classList.add('hidden-view');
+                document.getElementById('rewards-view').classList.remove('hidden-view');
+                window.scrollTo(0,0);
+            } else {
+                openLogin();
+            }
+        }
+
         function openLogin() { 
-            document.getElementById('login-modal').classList.remove('hidden'); 
-            document.getElementById('login-modal').classList.add('flex'); 
+            document.getElementById('login-modal').classList.replace('hidden', 'flex'); 
             document.getElementById('pin-input').focus(); 
         }
 
         function closeLogin() { 
-            document.getElementById('login-modal').classList.add('hidden'); 
-            document.getElementById('login-modal').classList.remove('flex'); 
+            document.getElementById('login-modal').classList.replace('flex', 'hidden'); 
             document.getElementById('pin-input').value = ''; 
-        }
-
-        function openLightbox(src) { 
-            document.getElementById('lightbox-img').src = src; 
-            document.getElementById('lightbox').classList.add('active'); 
-        }
-
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
-        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
-        function closeRewards() { 
-            document.getElementById('rewards-view').classList.add('hidden-view'); 
-            document.getElementById('shop-view').classList.remove('hidden-view'); 
         }
 
         function verifyPin() {
             const pin = document.getElementById('pin-input').value;
             if(ACCOUNTS[pin]) {
-                loadAccount(pin);
-                document.getElementById('shop-view').classList.add('hidden-view');
-                document.getElementById('rewards-view').classList.remove('hidden-view');
+                currentUser = ACCOUNTS[pin];
+                updateAuthUI();
                 closeLogin();
-                window.scrollTo(0,0);
-            } else { alert("Access Denied"); document.getElementById('pin-input').value = ''; }
-        }
-
-        function loadAccount(pin) {
-            const acc = ACCOUNTS[pin];
-            document.getElementById('view-title').innerText = acc.name;
-            document.getElementById('display-balance').innerText = acc.balance;
-            document.getElementById('account-number').innerText = "Account: " + acc.acc;
-            document.getElementById('status-tag').innerText = acc.tier;
-            document.getElementById('owner-initials').innerText = acc.owner;
-            document.getElementById('account-tier').innerText = acc.tier;
-            document.getElementById('card-theme').className = `bg-gradient-to-br ${acc.theme} rounded-3xl p-8 text-white mb-4 shadow-xl`;
-            document.getElementById('statement-list').innerHTML = acc.history.map(item => `
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div><p class="font-bold text-sm">${item.desc}</p><p class="text-[10px] text-gray-400 uppercase font-bold">${item.date}</p></div>
-                    <p class="${item.color} font-black text-sm">${item.amt} SS</p>
-                </div>`).join('');
-        }
-
-        function getQtyOptions(selected) {
-            let options = "";
-            for (let i = 1; i <= 24; i++) options += `<option value="${i}" ${selected == i ? 'selected' : ''}>${i}</option>`;
-            return options;
-        }
-
-        function renderProducts(list = products) {
-            const container = document.getElementById('product-container');
-            if (list.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400 font-bold">No products found matching your search.</div>`;
-                return;
+            } else { 
+                alert("Incorrect PIN."); 
+                document.getElementById('pin-input').value = ''; 
             }
-            container.innerHTML = list.map(p => `
-                <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full hover:shadow-lg transition-shadow">
-                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 md:h-40 object-contain rounded-2xl mb-4 cursor-zoom-in bg-gray-50 p-2" onerror="this.src='https://via.placeholder.com/150?text=Product'">
+        }
+
+        function logout() {
+            currentUser = null;
+            updateAuthUI();
+            closeRewards();
+        }
+
+        function updateAuthUI() {
+            const btnText = document.getElementById('user-btn-text');
+            const welcomeMsg = document.getElementById('welcome-msg');
+            const lockIcon = document.getElementById('lock-icon');
+            const reminder = document.getElementById('login-reminder');
+
+            if (currentUser) {
+                btnText.innerText = currentUser.firstName;
+                welcomeMsg.innerText = `Welcome back, ${currentUser.firstName}!`;
+                lockIcon.classList.replace('fa-lock', 'fa-check-circle');
+                reminder.classList.add('hidden');
+                
+                // Populate Profile
+                document.getElementById('display-balance').innerText = currentUser.balance;
+                document.getElementById('customer-id-display').innerText = currentUser.id;
+                document.getElementById('owner-name').innerText = currentUser.fullName;
+                document.getElementById('account-tier').innerText = currentUser.tier;
+                document.getElementById('card-theme').className = `bg-gradient-to-br ${currentUser.theme} rounded-3xl p-8 text-white mb-4 shadow-xl`;
+                document.getElementById('statement-list').innerHTML = currentUser.history.map(item => `
+                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div><p class="font-bold text-sm">${item.desc}</p><p class="text-[10px] text-gray-400 uppercase font-bold">${item.date}</p></div>
+                        <p class="${item.color} font-black text-sm">${item.amt} SS</p>
+                    </div>`).join('');
+            } else {
+                btnText.innerText = "Login";
+                welcomeMsg.innerText = "Stop scrolling,";
+                lockIcon.classList.replace('fa-check-circle', 'fa-lock');
+                reminder.classList.remove('hidden');
+            }
+        }
+
+        // SHOPPING LOGIC
+        const products = [
+            { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
+            { id: 2, name: "SASKO White Bread", category: "Bakery", price: 17.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
+            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", price: 34.00, img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" }
+        ];
+
+        function renderProducts() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = products.map(p => `
+                <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 md:h-40 object-contain rounded-2xl mb-4 cursor-zoom-in bg-gray-50 p-2">
                     <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
-                    <h3 class="font-bold text-sm md:text-base mb-1 line-clamp-2">${p.name}</h3>
-                    <div class="mt-auto pt-3">
-                        <select id="qty-${p.id}" class="w-full bg-gray-50 border border-gray-200 rounded-xl text-sm p-2 outline-none mb-3 font-bold text-gray-600">${getQtyOptions(1)}</select>
-                        <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-purple-800 active:scale-95 transition">Add to List</button>
+                    <h3 class="font-bold text-xs md:text-sm mb-1 h-8 line-clamp-2">${p.name}</h3>
+                    <p class="text-purple-700 font-black text-lg mb-3">R${p.price.toFixed(2)}</p>
+                    <div class="mt-auto">
+                        <select id="qty-${p.id}" class="w-full bg-gray-50 border border-gray-200 rounded-xl text-sm p-2 mb-3 font-bold">
+                            ${Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                        </select>
+                        <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase hover:bg-purple-800 transition">Add to List</button>
                     </div>
                 </div>`).join('');
         }
 
         function addToCart(id) {
             const product = products.find(p => p.id === id);
-            const qtyInput = document.getElementById(`qty-${id}`);
-            const qty = parseInt(qtyInput.value);
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
             const existing = cart.find(item => item.id === id);
-            if(existing) { 
-                existing.qty += qty; 
-                if(existing.qty > 24) existing.qty = 24; 
-            }
+            if(existing) { existing.qty = Math.min(24, existing.qty + qty); }
             else { cart.push({ ...product, qty: qty }); }
-            qtyInput.value = "1";
             saveCart();
             updateUI();
-            
-            // Brief animation on cart icon
-            const cartIcon = document.querySelector('.fa-clipboard-list');
-            cartIcon.classList.add('scale-125', 'text-purple-700');
-            setTimeout(() => cartIcon.classList.remove('scale-125', 'text-purple-700'), 300);
         }
-
-        function changeCartQty(index, newQty) { cart[index].qty = parseInt(newQty); saveCart(); updateUI(); }
-        function removeFromCart(i) { cart.splice(i, 1); saveCart(); updateUI(); }
-        function clearCart() { if(confirm("Clear your entire shopping list?")) { cart = []; saveCart(); updateUI(); } }
 
         function updateUI() {
             document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.qty, 0);
             const itemsContainer = document.getElementById('cart-items');
             const summary = document.getElementById('cart-summary');
+            
             if(cart.length === 0) {
                 itemsContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-full opacity-40 py-10"><i class="fa-solid fa-cart-shopping text-6xl mb-4"></i><p class="font-bold">Your list is empty</p></div>`;
                 summary.classList.add('hidden');
             } else {
                 summary.classList.remove('hidden');
+                const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+                document.getElementById('subtotal-display').innerText = `R${subtotal.toFixed(2)}`;
+                document.getElementById('total-display').innerText = `R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
                 itemsContainer.innerHTML = cart.map((item, index) => `
-                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100 shadow-sm">
-                    <img src="${item.img}" class="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-gray-200">
+                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                    <img src="${item.img}" class="w-12 h-12 object-contain bg-white rounded-lg p-1">
                     <div class="flex-grow">
-                        <p class="font-bold text-gray-800 text-xs leading-tight">${item.name}</p>
-                        <div class="flex items-center gap-2 mt-1"><span class="text-[9px] text-gray-400 font-black uppercase">Qty:</span>
-                            <select onchange="changeCartQty(${index}, this.value)" class="bg-white border rounded text-xs px-1 py-0.5 outline-none font-bold">${getQtyOptions(item.qty)}</select>
-                        </div>
+                        <p class="font-bold text-gray-800 text-[11px]">${item.name}</p>
+                        <p class="text-purple-600 font-black text-[10px]">R${(item.price * item.qty).toFixed(2)}</p>
                     </div>
-                    <button onclick="removeFromCart(${index})" class="text-red-400 p-2 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 p-2"><i class="fa-solid fa-trash-can"></i></button>
                 </div>`).join('');
             }
         }
 
-        function generatePlainTextList() {
-            let itemsText = cart.map(i => `• ${i.name} [x${i.qty}]`).join('\n');
-            return `SHOP SHAKUNG ORDER\n----------------------\n${itemsText}\n----------------------\nTotal Items: ${cart.reduce((s, i) => s + i.qty, 0)}\n\nThank you for shopping!`;
+        // CHECKOUT & SECURITY
+        function sendToWhatsApp() {
+            if (cart.length === 0) return;
+            
+            if (!currentUser) {
+                toggleCart(); // Close cart to show login modal clearly
+                openLogin();
+                return;
+            }
+
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            let items = cart.map(i => `• ${i.name} [x${i.qty}] @ R${(i.price * i.qty).toFixed(2)}`).join('\n');
+            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n----------------------\n${items}\n----------------------\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
         }
 
         function copyListToClipboard() {
             if (cart.length === 0) return;
-            const text = generatePlainTextList();
+            
+            if (!currentUser) {
+                toggleCart();
+                openLogin();
+                return;
+            }
+
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            let items = cart.map(i => `• ${i.name} [x${i.qty}]`).join('\n');
+            const text = `SHAKUNG LIST - ${currentUser.id}\n${items}\nTotal: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            
             navigator.clipboard.writeText(text).then(() => {
                 const toast = document.getElementById("copy-toast");
                 toast.className = "show";
-                setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+                setTimeout(() => { toast.className = ""; }, 3000);
             });
         }
 
-        function sendToWhatsApp() {
-            if (cart.length === 0) return;
-            const message = `*${generatePlainTextList()}*`;
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
-        }
+        function removeFromCart(i) { cart.splice(i, 1); saveCart(); updateUI(); }
+        function clearCart() { cart = []; saveCart(); updateUI(); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
+        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
+        function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
 
-        function filterProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            renderProducts(products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)));
-        }
-
-        function filterCategory(cat) {
-            // Update button styles
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                if(btn.innerText.toLowerCase() === cat.toLowerCase()) {
-                    btn.classList.add('bg-purple-700', 'text-white', 'shadow-md');
-                    btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
-                } else {
-                    btn.classList.remove('bg-purple-700', 'text-white', 'shadow-md');
-                    btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
-                }
-            });
-            
-            renderProducts(cat === 'all' ? products : products.filter(p => p.category === cat));
-        }
-
-        // Initialize from local storage on load
         renderProducts();
         updateUI();
     </script>
