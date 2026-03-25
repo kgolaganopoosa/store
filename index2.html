@@ -5,391 +5,719 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop Shakung</title>
     
+    <!-- PWA & Theme -->
     <meta name="theme-color" content="#7e22ce">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Shop Shakung">
-    
     <link rel="apple-touch-icon" href="navicon.jpg">
     <link rel="icon" href="navicon.jpg" type="image/x-icon">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind CSS v4 Play CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-        @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        .skeleton { background: #eee; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); border-radius: 20px; background-size: 200% 100%; animation: 1.5s shine linear infinite; }
+        :root {
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+        @media (min-width: 768px) {
+            .product-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .skeleton {
+            background: linear-gradient(110deg, #e5e7eb 8%, #f3f4f6 18%, #e5e7eb 33%);
+            background-size: 200% 100%;
+            animation: shine 1.5s linear infinite;
+            border-radius: 16px;
+        }
         @keyframes shine { to { background-position-x: -200%; } }
 
         #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; width: 90%; max-width: 400px; }
-        .toast { background: #1a1a1a; color: white; padding: 14px 24px; border-radius: 50px; font-weight: bold; font-size: 12px; margin-top: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast {
+            background: #111827;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
         .toast.show { transform: translateY(0); opacity: 1; }
 
-        .cart-slide { transform: translateX(100%); transition: transform 0.3s ease-in-out; }
+        .cart-slide { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); }
         .cart-slide.open { transform: translateX(0); }
-        .hidden-view { display: none; }
-        
-        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+
+        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1100; justify-content: center; align-items: center; padding: 20px; }
         #lightbox.active { display: flex; }
-        
+
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .category-btn.active { background-color: #7e22ce; color: white; border-color: #7e22ce; }
-        
-        /* Tier Gradients */
+
+        .category-btn.active {
+            background-color: #7e22ce;
+            color: white;
+            border-color: #7e22ce;
+        }
+
         .tier-gold { background: linear-gradient(to bottom right, #7e22ce, #4338ca); }
         .tier-platinum { background: linear-gradient(to bottom right, #1f2937, #111827, #000000); }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col font-sans">
 
     <div id="toast-container"></div>
 
-    <div id="lightbox" onclick="closeLightbox()">
-        <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl">
+    <!-- Lightbox -->
+    <div id="lightbox" onclick="if(event.target === this) closeLightbox()">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
+            <img id="lightbox-img" src="" class="w-full h-80 object-contain bg-zinc-100 dark:bg-zinc-800 p-6" alt="Product preview">
+            <div class="p-6">
+                <p id="lightbox-category" class="text-xs font-bold uppercase tracking-widest text-purple-600"></p>
+                <h3 id="lightbox-name" class="font-bold text-2xl mt-1"></h3>
+                <p id="lightbox-price" class="text-purple-700 dark:text-purple-400 font-black text-3xl mt-2"></p>
+                <button onclick="addCurrentToCart()" 
+                        class="mt-6 w-full bg-purple-700 hover:bg-purple-800 text-white py-4 rounded-2xl font-semibold active:scale-95 transition">
+                    Add to List
+                </button>
+            </div>
+        </div>
     </div>
 
+    <!-- Shop View -->
     <div id="shop-view">
-        <nav class="bg-white shadow-sm sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
+        <!-- Nav -->
+        <nav class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-700 overflow-hidden shadow-sm">
-                  <img src="navicon.jpg" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40?text=S'">
+                <div class="w-10 h-10 bg-purple-100 dark:bg-purple-950 rounded-2xl flex items-center justify-center overflow-hidden shadow">
+                    <img src="navicon.jpg" class="w-full h-full object-cover" alt="Shop Shakung logo" onerror="this.src='https://via.placeholder.com/40?text=S'">
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-black tracking-tight text-purple-700 leading-none">Shop Shakung</h1>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">By Petal Chain</p>
+                    <h1 class="text-2xl font-bold tracking-tighter text-purple-700 dark:text-purple-400">Shop Shakung</h1>
+                    <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">by Petal Chain</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button id="user-btn" onclick="handleAuthClick()" class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center shadow-sm hover:bg-gray-200 transition">
-                    <i class="fa-solid fa-circle-user mr-2 text-gray-500"></i>
-                    <span id="user-btn-text" class="font-bold text-gray-600 text-sm">Login</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleDarkMode()" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition">
+                    <i id="theme-icon" class="fa-solid fa-moon text-xl"></i>
+                </button>
+                
+                <button onclick="handleAuthClick()" 
+                        id="user-btn"
+                        class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-5 py-2 rounded-full transition">
+                    <i class="fa-solid fa-circle-user text-xl text-zinc-500"></i>
+                    <span id="user-btn-text" class="font-semibold text-sm">Login</span>
                 </button>
 
-                <div class="relative cursor-pointer" onclick="toggleCart()">
-                    <i class="fa-solid fa-clipboard-list text-3xl text-gray-800 hover:text-purple-700 transition-colors"></i>
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow">0</span>
+                <div onclick="toggleCart()" class="relative cursor-pointer">
+                    <i class="fa-solid fa-clipboard-list text-3xl text-zinc-700 dark:text-zinc-300 hover:text-purple-600 transition"></i>
+                    <span id="cart-count" 
+                          class="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow">
+                        0
+                    </span>
                 </div>
             </div>
         </nav>
 
-        <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-12 px-6 text-center">
-            <p class="text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-80">Freshness delivered, community first.</p>
-            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Stop scrolling,</h2>
-            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">start shopping!</h2>
+        <!-- Hero -->
+        <header class="bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-600 text-white py-14 px-6 text-center">
+            <p class="text-xs font-black uppercase tracking-[0.125em] opacity-75">Fresh • Local • Community Powered</p>
+            <h2 class="text-4xl md:text-5xl font-black tracking-tighter mt-3 leading-none">Stop scrolling.<br>Start shopping.</h2>
         </header>
 
         <div class="max-w-6xl mx-auto px-4 py-8">
-            <div class="relative mb-6">
-                <input id="searchInput" type="text" placeholder="Search for products..." class="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" oninput="runSearch()">
-                <i class="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <!-- Search & Sort -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                <div class="relative flex-1">
+                    <input id="searchInput" type="text" placeholder="Search products..." 
+                           class="w-full pl-12 pr-5 py-4 rounded-3xl border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:border-purple-500 bg-white dark:bg-zinc-900 text-sm"
+                           oninput="debouncedRender()">
+                    <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400"></i>
+                </div>
+                <select id="sortSelect" onchange="debouncedRender()" 
+                        class="px-5 py-4 rounded-3xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm">
+                    <option value="default">Sort: Recommended</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name A-Z</option>
+                </select>
             </div>
 
-            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-6">
-                <button onclick="filterByCategory('All')" class="category-btn active whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">All</button>
-                <button onclick="filterByCategory('Bakery')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Bakery</button>
-                <button onclick="filterByCategory('Dairy')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Dairy</button>
-                <button onclick="filterByCategory('Pantry')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Pantry</button>
-                <button onclick="filterByCategory('Snacks')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Snacks</button>
+            <!-- Categories -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-6 -mx-1">
+                <button onclick="filterByCategory('All')" id="cat-All"
+                        class="category-btn active whitespace-nowrap px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 font-semibold text-sm transition-all">All</button>
+                <button onclick="filterByCategory('Bakery')" id="cat-Bakery"
+                        class="category-btn whitespace-nowrap px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 font-semibold text-sm transition-all">Bakery</button>
+                <button onclick="filterByCategory('Dairy')" id="cat-Dairy"
+                        class="category-btn whitespace-nowrap px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 font-semibold text-sm transition-all">Dairy</button>
+                <button onclick="filterByCategory('Pantry')" id="cat-Pantry"
+                        class="category-btn whitespace-nowrap px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 font-semibold text-sm transition-all">Pantry</button>
+                <button onclick="filterByCategory('Snacks')" id="cat-Snacks"
+                        class="category-btn whitespace-nowrap px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 font-semibold text-sm transition-all">Snacks</button>
             </div>
 
+            <!-- Products -->
             <div id="product-container" class="product-grid">
-                <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
-                <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
 
-    <div id="rewards-view" class="hidden-view min-h-screen bg-white">
-        <nav class="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-50">
-            <div class="flex items-center gap-4">
-                <button onclick="closeRewards()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2 class="text-xl font-bold">ShakScore Rewards</h2>
-            </div>
-            <button onclick="logout()" class="text-red-500 font-bold text-[10px] bg-red-50 px-4 py-1.5 rounded-full">LOGOUT</button>
+    <!-- Rewards View -->
+    <div id="rewards-view" class="hidden min-h-screen bg-white dark:bg-zinc-900">
+        <nav class="border-b px-4 py-4 flex items-center justify-between sticky top-0 bg-white dark:bg-zinc-900 z-50">
+            <button onclick="closeRewards()" class="flex items-center gap-2 text-zinc-500">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span class="font-medium">Back</span>
+            </button>
+            <h2 class="font-bold text-xl">ShakScore Rewards</h2>
+            <button onclick="logout()" class="text-red-600 text-xs font-bold px-4 py-2 rounded-full bg-red-50 dark:bg-red-950">LOGOUT</button>
         </nav>
-        <div class="max-w-2xl mx-auto p-6">
-            <div id="card-element" class="rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500">
-                <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Available Balance</p>
-                <h3 class="text-5xl font-black mb-1"><span id="display-balance">250.00</span> <span class="text-2xl font-normal opacity-70">SS</span></h3>
-                <p id="card-note" class="text-[10px] font-bold text-purple-200 mb-6 italic">*ShakScore (SS) is equivalent to South African Rands</p>
-                
-                <div class="flex justify-between items-end border-t border-white/20 pt-4">
-                    <div>
-                        <p id="owner-name-display" class="text-sm font-bold"></p>
-                        <p id="customer-id-display-card" class="text-[10px] font-mono opacity-70"></p>
-                    </div>
-                    <span id="tier-badge" class="text-[10px] bg-white/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">GOLD TIER</span>
+        
+        <div class="max-w-xl mx-auto p-6">
+            <div id="card-element" class="tier-gold rounded-3xl p-8 text-white shadow-2xl mb-8">
+                <!-- Populated by JS -->
+            </div>
+
+            <h3 class="font-semibold mb-4 text-lg">Recent Activity</h3>
+            <div id="statement-history" class="space-y-3">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal View -->
+    <div id="legal-view" class="hidden min-h-screen bg-white dark:bg-zinc-900">
+        <nav class="border-b px-4 py-4 flex items-center gap-4 sticky top-0 bg-white dark:bg-zinc-900 z-50">
+            <button onclick="closeLegal()" class="text-xl text-zinc-500"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="legal-title" class="font-bold text-xl">Legal</h2>
+        </nav>
+        <div id="legal-content" class="max-w-3xl mx-auto p-6 prose dark:prose-invert text-sm leading-relaxed"></div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[1200] p-4">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-sm p-8 text-center">
+            <div class="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-2xl flex items-center justify-center mb-6">
+                <i class="fa-solid fa-lock text-3xl text-purple-600"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-1">Welcome back</h3>
+            <p class="text-zinc-500 text-sm mb-8">Enter your 4-digit PIN</p>
+            
+            <input id="pin-input" type="password" inputmode="numeric" maxlength="4" 
+                   class="w-40 text-center text-5xl tracking-widest font-mono border-b-4 border-purple-600 outline-none bg-transparent pb-3"
+                   placeholder="••••">
+            
+            <div class="flex gap-3 mt-10">
+                <button onclick="closeLogin()" 
+                        class="flex-1 py-4 font-semibold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl">Cancel</button>
+                <button onclick="verifyPin()" 
+                        class="flex-1 py-4 bg-purple-700 text-white font-semibold rounded-2xl active:bg-purple-800">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Drawer -->
+    <div id="cart-drawer" class="cart-slide fixed top-0 right-0 h-full w-full md:w-96 bg-white dark:bg-zinc-900 shadow-2xl z-[100] flex flex-col overflow-hidden">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h2 class="text-2xl font-semibold">Your List</h2>
+            <button onclick="toggleCart()" class="text-4xl leading-none text-zinc-400 hover:text-zinc-600">×</button>
+        </div>
+        
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-5"></div>
+        
+        <div class="p-6 border-t bg-zinc-50 dark:bg-zinc-950">
+            <div id="cart-summary" class="hidden">
+                <div class="flex justify-between text-sm mb-6">
+                    <button onclick="clearCart()" class="text-red-600 font-medium hover:underline">Clear list</button>
+                    <button onclick="copyOrder()" class="flex items-center gap-1 text-purple-700 font-medium">
+                        <i class="fa-solid fa-copy"></i> Copy order
+                    </button>
+                </div>
+                <div class="flex justify-between items-baseline mb-6">
+                    <span class="text-zinc-500 text-sm">Total incl. R15 delivery</span>
+                    <span id="total-display" class="text-3xl font-bold text-purple-700"></span>
                 </div>
             </div>
             
-            <h3 class="font-bold text-lg mb-4">Statement History</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div><p class="font-bold text-sm">Signup Bonus</p><p class="text-[10px] text-gray-400">Mar 22, 2026</p></div>
-                    <span class="text-green-600 font-black">+250.00 SS</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="legal-view" class="hidden-view min-h-screen bg-white">
-        <nav class="p-4 border-b flex items-center gap-4 bg-white sticky top-0 z-50">
-            <button onclick="closeLegal()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
-            <h2 id="legal-title" class="text-xl font-bold">Legal</h2>
-        </nav>
-        <div class="max-w-3xl mx-auto p-6 text-gray-600 leading-relaxed text-sm" id="legal-content"></div>
-    </div>
-
-    <div id="login-modal" class="fixed inset-0 bg-black/60 z-[1000] hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl">
-            <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-lock text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold mb-2">Secure Login</h3>
-            <p class="text-gray-500 text-sm mb-6">Enter your 4-digit PIN to checkout.</p>
-            <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="w-32 text-center text-4xl border-b-4 border-purple-500 outline-none mb-10 pb-2 font-mono">
-            <div class="flex gap-3">
-                <button onclick="closeLogin()" class="flex-1 py-4 text-gray-500 font-bold">Cancel</button>
-                <button onclick="verifyPin()" class="flex-1 py-4 bg-purple-700 text-white rounded-2xl font-bold">Unlock</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl z-[100] overflow-y-auto cart-slide flex flex-col">
-        <div class="p-6 flex justify-between items-center border-b">
-            <h2 class="text-2xl font-bold">Your List</h2>
-            <button onclick="toggleCart()" class="text-4xl">×</button>
-        </div>
-        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
-        <div class="p-6 border-t bg-gray-50">
-            <div id="cart-summary" class="mb-4 hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <button onclick="clearCart()" class="text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100">Clear</button>
-                    <button id="copy-btn" onclick="copyOrder()" class="text-purple-700 text-[10px] font-black uppercase tracking-widest bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100">
-                        <i class="fa-solid fa-copy mr-1"></i> Copy Order
-                    </button>
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-400 font-bold">Total + R15 Fee</p>
-                        <p id="total-display" class="text-xl font-black text-purple-700">R0.00</p>
-                    </div>
-                </div>
-            </div>
-            <button id="whatsapp-btn" onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg">
-                <i id="lock-icon" class="fa-solid fa-lock text-sm opacity-50"></i>
-                <i class="fa-brands fa-whatsapp text-2xl"></i> Send to WhatsApp
+            <button onclick="sendToWhatsApp()" 
+                    class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-3xl font-semibold flex items-center justify-center gap-3 transition">
+                <i class="fa-brands fa-whatsapp text-2xl"></i>
+                <span>Send to WhatsApp</span>
             </button>
         </div>
     </div>
 
-    <footer class="bg-white border-t border-gray-200 pt-12 pb-8 mt-auto">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10 text-center md:text-left">
+    <!-- Footer -->
+    <footer class="mt-auto bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 py-12">
+        <div class="max-w-6xl mx-auto px-6 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <div>
-                    <h4 class="font-black text-purple-700 text-xl mb-4">Shop Shakung</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">Neighborhood groceries powered by Petal Chain.</p>
+                    <h4 class="font-bold text-purple-700 text-2xl mb-2">Shop Shakung</h4>
+                    <p class="text-zinc-500 text-sm">Neighborhood groceries, delivered with care by Petal Chain.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold text-gray-900 mb-4 text-sm uppercase">Legal Information</h4>
-                    <ul class="text-sm text-gray-600 space-y-3">
-                        <li><button onclick="showPrivacy()" class="hover:text-purple-700">Privacy Policy</button></li>
-                        <li><button onclick="showTerms()" class="hover:text-purple-700">Terms of Use</button></li>
-                    </ul>
+                    <h5 class="font-semibold mb-4 text-xs uppercase tracking-widest text-zinc-400">Legal</h5>
+                    <div class="flex flex-col gap-2 text-sm">
+                        <button onclick="showPrivacy()" class="hover:text-purple-600 text-left">Privacy Policy</button>
+                        <button onclick="showTerms()" class="hover:text-purple-600 text-left">Terms of Use</button>
+                    </div>
                 </div>
                 <div>
-                    <h4 class="font-bold text-gray-900 mb-4 text-sm uppercase">Quick Support</h4>
-                    <a href="https://wa.me/27646575290" class="text-green-600 font-bold hover:underline">WhatsApp Helpdesk</a>
+                    <h5 class="font-semibold mb-4 text-xs uppercase tracking-widest text-zinc-400">Support</h5>
+                    <a href="https://wa.me/27646575290" target="_blank" 
+                       class="text-green-600 font-medium hover:underline flex items-center gap-2 justify-center md:justify-start">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp Helpdesk
+                    </a>
                 </div>
             </div>
-            <div class="pt-8 border-t border-gray-100 text-center">
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2026 Petal Chain ecosystem</p>
+            <div class="mt-12 pt-8 border-t text-[10px] text-zinc-400 font-medium">
+                © 2026 Petal Chain ecosystem • Made with ❤️ for Shakung
             </div>
         </div>
     </footer>
 
     <script>
-        const WHATSAPP_NUMBER = "27646575290"; 
-        const DELIVERY_FEE = 15.00;
+        // Tailwind script runs automatically
+
+        const WHATSAPP_NUMBER = "27646575290";
+        const DELIVERY_FEE = 15;
+
         let currentCategory = 'All';
-        const ACCOUNTS = { 
+        let currentSort = 'default';
+        let currentUser = null;
+        let cart = JSON.parse(localStorage.getItem('shak_cart')) || [];
+        let favorites = JSON.parse(localStorage.getItem('shak_favorites')) || [];
+
+        const ACCOUNTS = {
             "1234": { id: "SHAK-2026-001", fullName: "Kgolagano P.", firstName: "Kgolagano", tier: "gold" },
             "0001": { id: "SHAK-2026-999", fullName: "Platinum Member", firstName: "VIP", tier: "platinum" }
         };
+
         const PRODUCTS = [
-            { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
-            { id: 2, name: "SASKO White Bread", category: "Bakery", price: 17.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
-            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", price: 34.00, img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" }
+            { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://picsum.photos/id/201/300/200" },
+            { id: 2, name: "SASKO White Bread", category: "Bakery", price: 17.50, img: "https://picsum.photos/id/292/300/200" },
+            { id: 3, name: "Fresh Milk 2L", category: "Dairy", price: 28.00, img: "https://picsum.photos/id/1080/300/200" },
+            { id: 4, name: "Ace Maize Meal 2.5kg", category: "Pantry", price: 34.00, img: "https://picsum.photos/id/312/300/200" },
+            { id: 5, name: "Large Eggs (18)", category: "Dairy", price: 42.50, img: "https://picsum.photos/id/431/300/200" },
+            { id: 6, name: "Simba Cheese & Onion Chips", category: "Snacks", price: 19.99, img: "https://picsum.photos/id/870/300/200" },
+            { id: 7, name: "Jungle Oats 1kg", category: "Pantry", price: 26.00, img: "https://picsum.photos/id/106/300/200" },
+            { id: 8, name: "Clover Full Cream Yoghurt", category: "Dairy", price: 15.50, img: "https://picsum.photos/id/133/300/200" }
         ];
 
-        let currentUser = null;
-        let cart = JSON.parse(localStorage.getItem('shak_cart')) || [];
+        let currentLightboxProduct = null;
 
-        function showToast(msg) {
-            const c = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = 'toast show';
-            t.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i><span>${msg}</span>`;
-            c.appendChild(t);
-            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 2000);
+        // Toast
+        function showToast(msg, icon = "fa-circle-check") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast show';
+            toast.innerHTML = `<i class="fa-solid \( {icon} text-green-400"></i><span> \){msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 2500);
         }
 
+        // Render products with quantity-aware cart check
         function renderProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = PRODUCTS.filter(p => (currentCategory === 'All' || p.category === currentCategory) && p.name.toLowerCase().includes(query));
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = PRODUCTS.filter(p => 
+                (currentCategory === 'All' || p.category === currentCategory) &&
+                p.name.toLowerCase().includes(query)
+            );
+
+            // Sort
+            if (currentSort === 'price-low') filtered.sort((a,b) => a.price - b.price);
+            if (currentSort === 'price-high') filtered.sort((a,b) => b.price - a.price);
+            if (currentSort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
+
             const container = document.getElementById('product-container');
-            container.innerHTML = filtered.map(p => `
-                <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
-                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-4 bg-gray-50 p-2 cursor-zoom-in">
-                    <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
-                    <h3 class="font-bold text-xs mb-1 h-8 line-clamp-2">${p.name}</h3>
-                    <p class="text-purple-700 font-black text-lg mb-3">R${p.price.toFixed(2)}</p>
-                    <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add to List</button>
-                </div>`).join('');
+            container.innerHTML = '';
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20 text-zinc-400">
+                        <i class="fa-solid fa-box-open text-6xl mb-4"></i>
+                        <p class="font-medium">No products found</p>
+                    </div>`;
+                return;
+            }
+
+            filtered.forEach(product => {
+                const isInCart = cart.some(item => item.id === product.id);
+                const isFav = favorites.includes(product.id);
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all active:scale-[0.985]";
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${product.img}" loading="lazy" 
+                             onclick="openQuickView(${product.id})"
+                             class="w-full h-52 object-cover bg-zinc-100 dark:bg-zinc-800 cursor-zoom-in" 
+                             alt="${product.name}">
+                        <button onclick="toggleFavorite(${product.id}); event.stopImmediatePropagation()" 
+                                class="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/70 backdrop-blur rounded-2xl flex items-center justify-center text-lg transition">
+                            <i class="fa-solid fa-heart ${isFav ? 'text-red-500' : 'text-zinc-300'}"></i>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-purple-600">${product.category}</p>
+                        <h3 class="font-semibold text-base leading-tight mt-1 mb-3 line-clamp-2">${product.name}</h3>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="font-black text-2xl text-purple-700 dark:text-purple-400">R${product.price.toFixed(2)}</p>
+                            </div>
+                            <button onclick="addToCart(${product.id}); event.stopImmediatePropagation()" 
+                                    class="px-6 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-sm font-semibold rounded-2xl transition active:scale-95">
+                                ${isInCart ? 'In list' : 'Add'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function debouncedRender() {
+            clearTimeout(window.renderTimeout);
+            window.renderTimeout = setTimeout(renderProducts, 180);
         }
 
         function addToCart(id) {
-            const p = PRODUCTS.find(x => x.id === id);
-            cart.push(p);
+            const product = PRODUCTS.find(p => p.id === id);
+            if (!product) return;
+
+            const existing = cart.findIndex(item => item.id === id);
+            if (existing > -1) {
+                cart[existing].quantity = (cart[existing].quantity || 1) + 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
             localStorage.setItem('shak_cart', JSON.stringify(cart));
-            updateUI();
-            showToast(`${p.name} added!`);
+            updateCartUI();
+            showToast(`${product.name} added to list`);
         }
 
-        function updateUI() {
-            document.getElementById('cart-count').innerText = cart.length;
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
-            const summary = document.getElementById('cart-summary');
-            if(cart.length > 0) {
-                summary.classList.remove('hidden');
-                document.getElementById('total-display').innerText = `R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
-            } else { summary.classList.add('hidden'); }
-            
-            document.getElementById('cart-items').innerHTML = cart.map((item, index) => `
-                <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
-                    <img src="${item.img}" class="w-10 h-10 object-contain bg-white rounded-lg p-1">
-                    <div class="flex-grow"><p class="font-bold text-[11px]">${item.name}</p><p class="text-purple-600 font-black text-[10px]">R${item.price.toFixed(2)}</p></div>
-                    <button onclick="removeFromCart(${index})" class="text-red-400 p-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                </div>`).join('');
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('shak_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function changeQuantity(index, delta) {
+            cart[index].quantity = Math.max(1, (cart[index].quantity || 1) + delta);
+            localStorage.setItem('shak_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+            const itemsContainer = document.getElementById('cart-items');
+            itemsContainer.innerHTML = '';
+
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="text-center py-20 text-zinc-400">
+                        <i class="fa-solid fa-cart-shopping text-6xl mb-4"></i>
+                        <p class="font-medium">Your list is empty</p>
+                        <p class="text-xs mt-2">Add some groceries from the shop</p>
+                    </div>`;
+                document.getElementById('cart-summary').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('cart-summary').classList.remove('hidden');
+
+            const subtotal = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+
+            cart.forEach((item, index) => {
+                const qty = item.quantity || 1;
+                const div = document.createElement('div');
+                div.className = "flex gap-4 bg-zinc-50 dark:bg-zinc-800 p-4 rounded-3xl";
+                div.innerHTML = `
+                    <img src="\( {item.img}" class="w-16 h-16 object-contain bg-white rounded-2xl" alt=" \){item.name}">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm leading-tight">${item.name}</p>
+                        <p class="text-purple-600 font-bold text-xs mt-1">R${(item.price * qty).toFixed(2)}</p>
+                        
+                        <div class="flex items-center gap-3 mt-3">
+                            <button onclick="changeQuantity(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-zinc-700 rounded-lg text-zinc-500 hover:text-black">-</button>
+                            <span class="font-mono w-6 text-center">${qty}</span>
+                            <button onclick="changeQuantity(${index}, 1)" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-zinc-700 rounded-lg text-zinc-500 hover:text-black">+</button>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 self-start mt-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                itemsContainer.appendChild(div);
+            });
+
+            document.getElementById('total-display').textContent = `R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('shak_favorites', JSON.stringify(favorites));
+            renderProducts();
         }
 
         async function getLocation() {
-            return new Promise((resolve) => {
+            return new Promise(resolve => {
                 if (!navigator.geolocation) return resolve(null);
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`),
+                    pos => resolve(`https://maps.google.com/?q=\( {pos.coords.latitude}, \){pos.coords.longitude}`),
                     () => resolve(null),
-                    { timeout: 5000 }
+                    { timeout: 8000 }
                 );
             });
         }
 
         async function copyOrder() {
-            if(!currentUser) { toggleCart(); openLogin(); return; }
+            if (!currentUser) {
+                toggleCart();
+                openLogin();
+                return;
+            }
             const loc = await getLocation();
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
-            const items = cart.map(i => `• ${i.name}`).join('\n');
-            const locStr = loc ? `\nLOCATION: ${loc}` : "";
-            const orderText = `SHOP SHAKUNG LIST\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n------------------\n${items}\n------------------\nTotal + Fee: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
-            navigator.clipboard.writeText(orderText).then(() => showToast("Order copied!"));
+            const itemsText = cart.map(i => `• ${i.quantity || 1} × ${i.name}`).join('\n');
+            const subtotal = cart.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+            const text = `SHOP SHAKUNG ORDER\nCustomer: ${currentUser.fullName}\nID: \( {currentUser.id}\n \){loc ? `Location: \( {loc}` : ''}\n\n \){itemsText}\n\nTotal + R15: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            
+            navigator.clipboard.writeText(text).then(() => showToast("Order copied to clipboard"));
         }
 
         async function sendToWhatsApp() {
-            if(!currentUser) { toggleCart(); openLogin(); return; }
-            if(cart.length === 0) return;
-            showToast("Fetching location...");
+            if (!currentUser) {
+                toggleCart();
+                openLogin();
+                return;
+            }
+            if (cart.length === 0) return;
+
+            showToast("Getting your location...", "fa-location-dot");
             const loc = await getLocation();
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
-            const items = cart.map(i => `• ${i.name}`).join('\n');
-            const locStr = loc ? `\nLOCATION: ${loc}` : "";
-            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
+            const itemsText = cart.map(i => `• ${i.quantity || 1} × ${i.name}`).join('\n');
+            const subtotal = cart.reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+
+            const message = `🛒 SHOP SHAKUNG ORDER\n\nCustomer: ${currentUser.fullName}\nID: \( {currentUser.id}\n \){loc ? `📍 \( {loc}` : ''}\n\n \){itemsText}\n\n💰 Total + delivery: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+
+            window.open(`https://wa.me/\( {WHATSAPP_NUMBER}?text= \){encodeURIComponent(message)}`, '_blank');
         }
 
+        function openQuickView(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+            if (!product) return;
+            
+            currentLightboxProduct = product;
+            
+            document.getElementById('lightbox-img').src = product.img;
+            document.getElementById('lightbox-img').alt = product.name;
+            document.getElementById('lightbox-category').textContent = product.category;
+            document.getElementById('lightbox-name').textContent = product.name;
+            document.getElementById('lightbox-price').textContent = `R${product.price.toFixed(2)}`;
+            
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function addCurrentToCart() {
+            if (currentLightboxProduct) {
+                addToCart(currentLightboxProduct.id);
+                closeLightbox();
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // Auth & PIN
         function verifyPin() {
-            const pin = document.getElementById('pin-input').value;
-            if(ACCOUNTS[pin]) {
+            const pin = document.getElementById('pin-input').value.trim();
+            if (ACCOUNTS[pin]) {
                 currentUser = ACCOUNTS[pin];
                 updateAuthUI();
                 closeLogin();
+                showToast(`Welcome, ${currentUser.firstName}!`, "fa-hand-wave");
                 
-                // Update Card View Details
-                document.getElementById('owner-name-display').innerText = currentUser.fullName;
-                document.getElementById('customer-id-display-card').innerText = currentUser.id;
-                
-                // Tier specific UI
-                const card = document.getElementById('card-element');
-                const badge = document.getElementById('tier-badge');
-                const note = document.getElementById('card-note');
-                
-                if(currentUser.tier === "platinum") {
-                    card.className = "rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-platinum";
-                    badge.innerText = "PLATINUM TIER";
-                    note.style.color = "#9ca3af"; // Gray note for platinum
-                } else {
-                    card.className = "rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-gold";
-                    badge.innerText = "GOLD TIER";
-                    note.style.color = "#e9d5ff"; // Purple note for gold
-                }
-                
-                showToast("Logged in!");
-            } else { alert("Wrong PIN"); }
+                // Update rewards card
+                renderRewardsCard();
+            } else {
+                showToast("Incorrect PIN", "fa-circle-xmark");
+            }
         }
 
-        function filterByCategory(cat) { currentCategory = cat; document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat)); renderProducts(); }
-        function runSearch() { renderProducts(); }
-        function clearCart() { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
-        function removeFromCart(i) { cart.splice(i, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
-        function handleAuthClick() { if (currentUser) { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('rewards-view').classList.remove('hidden-view'); } else { openLogin(); } }
-        function openLogin() { document.getElementById('login-modal').classList.replace('hidden', 'flex'); }
-        function closeLogin() { document.getElementById('login-modal').classList.replace('flex', 'hidden'); document.getElementById('pin-input').value = ""; }
-        function logout() { currentUser = null; updateAuthUI(); closeRewards(); }
-        function updateAuthUI() { document.getElementById('user-btn-text').innerText = currentUser ? currentUser.firstName : "Login"; document.getElementById('lock-icon').className = currentUser ? "fa-solid fa-check-circle text-sm opacity-50" : "fa-solid fa-lock text-sm opacity-50"; }
-        function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
-        
-        function showPrivacy() { 
-            document.getElementById('legal-title').innerText = "Privacy Policy"; 
-            document.getElementById('legal-content').innerHTML = `
-                <div class="space-y-4">
-                    <p class="font-bold">Effective Date: March 24, 2026</p>
-                    <p>At Shop Shakung (powered by Petal Chain), we value your privacy. This policy explains how we handle your data.</p>
-                    <h3 class="font-bold text-gray-900">1. Information We Collect</h3>
-                    <p>We collect your name and Customer ID to manage your ShakScore balance. When you place an order, we request access to your GPS location to ensure accurate delivery to your doorstep.</p>
-                    <h3 class="font-bold text-gray-900">2. WhatsApp Communication</h3>
-                    <p>Since we operate via WhatsApp, your phone number and chat history with our service are stored by WhatsApp according to their own privacy standards. We only use this information to fulfill your specific orders.</p>
-                    <h3 class="font-bold text-gray-900">3. Data Security</h3>
-                    <p>Your PIN is stored locally on your device for security. We do not sell your personal data to third parties.</p>
-                </div>`; 
-            openLegal(); 
+        function updateAuthUI() {
+            document.getElementById('user-btn-text').textContent = currentUser ? currentUser.firstName : "Login";
         }
-        
-        function showTerms() { 
-            document.getElementById('legal-title').innerText = "Terms of Use"; 
-            document.getElementById('legal-content').innerHTML = `
-                <div class="space-y-4">
-                    <h3 class="font-bold text-gray-900">1. Service Availability</h3>
-                    <p>Shop Shakung currently serves the Shakung community. Delivery is subject to local availability and product stock.</p>
-                    <h3 class="font-bold text-gray-900">2. Pricing & Fees</h3>
-                    <p>All prices are listed in South African Rands (ZAR). A flat delivery fee of R15.00 is applied to every order to cover local logistics.</p>
-                    <h3 class="font-bold text-gray-900">3. ShakScore Rewards</h3>
-                    <p>ShakScore (SS) is a digital loyalty credit. 1 SS = 1 ZAR. Credits are non-transferable and can only be used for purchases within the Shop Shakung platform.</p>
-                    <h3 class="font-bold text-gray-900">4. Order Fulfillment</h3>
-                    <p>An order is only confirmed once you have sent the generated list to our WhatsApp business line and received a confirmation message from our team.</p>
-                </div>`; 
-            openLegal(); 
-        }
-        
-        function openLegal() { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('legal-view').classList.remove('hidden-view'); }
-        function closeLegal() { document.getElementById('legal-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
-        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
-        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
 
-        setTimeout(() => renderProducts(), 1200);
-        updateUI();
+        function handleAuthClick() {
+            if (currentUser) {
+                document.getElementById('shop-view').classList.add('hidden');
+                document.getElementById('rewards-view').classList.remove('hidden');
+                renderRewardsCard();
+            } else {
+                openLogin();
+            }
+        }
+
+        function renderRewardsCard() {
+            if (!currentUser) return;
+            
+            const card = document.getElementById('card-element');
+            card.className = currentUser.tier === "platinum" 
+                ? "tier-platinum rounded-3xl p-8 text-white shadow-2xl" 
+                : "tier-gold rounded-3xl p-8 text-white shadow-2xl";
+            
+            card.innerHTML = `
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-xs font-bold opacity-70">Available ShakScore</p>
+                        <p class="text-6xl font-black tracking-tighter mt-1">250.00 <span class="text-2xl opacity-70">SS</span></p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest">${currentUser.tier.toUpperCase()} TIER</span>
+                    </div>
+                </div>
+                <div class="mt-10 pt-6 border-t border-white/30 flex justify-between text-sm">
+                    <div>
+                        <p class="font-medium">${currentUser.fullName}</p>
+                        <p class="font-mono text-xs opacity-70">${currentUser.id}</p>
+                    </div>
+                    <p class="text-xs opacity-70 self-end">1 SS = 1 ZAR</p>
+                </div>
+            `;
+        }
+
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `cat-${cat}`);
+            });
+            renderProducts();
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-drawer').classList.toggle('open');
+        }
+
+        function clearCart() {
+            if (confirm("Clear entire list?")) {
+                cart = [];
+                localStorage.setItem('shak_cart', JSON.stringify(cart));
+                updateCartUI();
+            }
+        }
+
+        function openLogin() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('pin-input').focus();
+        }
+
+        function closeLogin() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('pin-input').value = '';
+        }
+
+        function logout() {
+            currentUser = null;
+            updateAuthUI();
+            closeRewards();
+            showToast("Logged out");
+        }
+
+        function closeRewards() {
+            document.getElementById('rewards-view').classList.add('hidden');
+            document.getElementById('shop-view').classList.remove('hidden');
+        }
+
+        function showPrivacy() {
+            document.getElementById('legal-title').textContent = "Privacy Policy";
+            document.getElementById('legal-content').innerHTML = `
+                <p class="font-medium">Effective: March 2026</p>
+                <p class="mt-4">We only collect the minimum data needed to process your orders and maintain your ShakScore balance. Location is requested only when you choose to share it for delivery.</p>
+                <p class="mt-4">Your PIN is stored locally on this device.</p>
+            `;
+            openLegal();
+        }
+
+        function showTerms() {
+            document.getElementById('legal-title').textContent = "Terms of Use";
+            document.getElementById('legal-content').innerHTML = `
+                <p>Orders are confirmed only after you send the list via WhatsApp and receive confirmation from our team.</p>
+                <p class="mt-4">A R15 delivery fee applies to every order within the service area.</p>
+            `;
+            openLegal();
+        }
+
+        function openLegal() {
+            document.getElementById('shop-view').classList.add('hidden');
+            document.getElementById('legal-view').classList.remove('hidden');
+        }
+
+        function closeLegal() {
+            document.getElementById('legal-view').classList.add('hidden');
+            document.getElementById('shop-view').classList.remove('hidden');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+        }
+
+        // Keyboard support for lightbox and modals
+        document.addEventListener('keydown', e => {
+            if (e.key === "Escape") {
+                const lightbox = document.getElementById('lightbox');
+                if (lightbox.classList.contains('active')) closeLightbox();
+                
+                const loginModal = document.getElementById('login-modal');
+                if (!loginModal.classList.contains('hidden')) closeLogin();
+            }
+        });
+
+        // Initialize
+        function init() {
+            // Tailwind script already loaded
+            renderProducts();
+            updateCartUI();
+            updateAuthUI();
+
+            // Demo: show a welcome toast after load
+            setTimeout(() => {
+                showToast("Welcome to Shop Shakung! 🛍️");
+            }, 1400);
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
