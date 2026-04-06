@@ -111,7 +111,7 @@
             <button onclick="logout()" class="text-red-500 font-bold text-[10px] bg-red-50 px-4 py-1.5 rounded-full">LOGOUT</button>
         </nav>
         <div class="max-w-2xl mx-auto p-6">
-            <div id="card-element" class="rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500">
+            <div id="card-element" class="rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-gold">
                 <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Available Balance</p>
                 <h3 class="text-5xl font-black mb-1"><span id="display-balance">250.00</span> <span class="text-2xl font-normal opacity-70">SS</span></h3>
                 <p id="card-note" class="text-[10px] font-bold text-purple-200 mb-6 italic">*ShakScore (SS) is equivalent to South African Rands</p>
@@ -170,13 +170,12 @@
                         <i class="fa-solid fa-copy mr-1"></i> Copy Order
                     </button>
                     <div class="text-right">
-                        <p class="text-[10px] text-gray-400 font-bold">Total + R15 Fee</p>
+                        <p class="text-[10px] text-gray-400 font-bold">Total + R5 Fee</p>
                         <p id="total-display" class="text-xl font-black text-purple-700">R0.00</p>
                     </div>
                 </div>
             </div>
             <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg">
-                <i id="lock-icon" class="fa-solid fa-lock text-sm opacity-50"></i>
                 <i class="fa-brands fa-whatsapp text-2xl"></i> Send to WhatsApp
             </button>
         </div>
@@ -209,7 +208,7 @@
 
     <script>
         const WHATSAPP_NUMBER = "27646575290"; 
-        const DELIVERY_FEE = 15.00;
+        const DELIVERY_FEE = 5.00;
         let currentCategory = 'All';
         const ACCOUNTS = { 
             "1234": { id: "SHAK-2026-001", fullName: "Kgolagano P.", firstName: "Kgolagano", tier: "gold" }
@@ -236,7 +235,6 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = PRODUCTS.filter(p => (currentCategory === 'All' || p.category === currentCategory) && p.name.toLowerCase().includes(query));
             const container = document.getElementById('product-container');
-            
             const qtyOptions = Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('');
 
             container.innerHTML = filtered.map(p => `
@@ -245,9 +243,8 @@
                     <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
                     <h3 class="font-bold text-xs mb-1 h-8 line-clamp-2">${p.name}</h3>
                     <p class="text-purple-700 font-black text-lg mb-2">R${p.price.toFixed(2)}</p>
-                    
                     <div class="flex gap-2 mt-auto">
-                        <select id="qty-${p.id}" class="bg-gray-100 border-none rounded-xl px-2 text-xs font-bold outline-none focus:ring-2 focus:ring-purple-500">
+                        <select id="qty-${p.id}" class="bg-gray-100 border-none rounded-xl px-2 text-xs font-bold outline-none">
                             ${qtyOptions}
                         </select>
                         <button onclick="addToCart(${p.id})" class="flex-grow bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add</button>
@@ -297,12 +294,28 @@
                 </div>`).join('');
         }
 
+        async function getPosition() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`),
+                    () => resolve(null),
+                    { timeout: 5000 }
+                );
+            });
+        }
+
         async function sendToWhatsApp() {
             if(!currentUser) { toggleCart(); openLogin(); return; }
             if(cart.length === 0) return;
+            
+            showToast("Adding location...");
+            const mapLink = await getPosition();
+            const locStr = mapLink ? `\n📍 DELIVERY LOCATION:\n${mapLink}` : "\n(Location not provided)";
+            
             const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const items = cart.map(i => `• [${i.quantity}x] ${i.name}`).join('\n');
-            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
         }
 
@@ -314,7 +327,6 @@
             navigator.clipboard.writeText(text).then(() => showToast("Order copied!"));
         }
 
-        // Standard helpers
         function removeFromCart(i) { cart.splice(i, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
         function clearCart() { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
         function filterByCategory(cat) { currentCategory = cat; document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat)); renderProducts(); }
@@ -323,6 +335,7 @@
         function openLogin() { document.getElementById('login-modal').classList.replace('hidden', 'flex'); }
         function closeLogin() { document.getElementById('login-modal').classList.replace('flex', 'hidden'); }
         function handleAuthClick() { if (currentUser) { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('rewards-view').classList.remove('hidden-view'); } else { openLogin(); } }
+        
         function verifyPin() { 
             const pin = document.getElementById('pin-input').value; 
             if(ACCOUNTS[pin]) { 
@@ -330,30 +343,30 @@
                 closeLogin(); 
                 document.getElementById('owner-name-display').innerText = currentUser.fullName;
                 document.getElementById('customer-id-display-card').innerText = currentUser.id;
-                updateAuthUI(); 
+                document.getElementById('user-btn-text').innerText = currentUser.firstName;
                 showToast("Logged in!"); 
             } else { alert("Wrong PIN"); }
         }
-        function updateAuthUI() { document.getElementById('user-btn-text').innerText = currentUser ? currentUser.firstName : "Login"; }
-        function logout() { currentUser = null; updateAuthUI(); closeRewards(); }
+
+        function logout() { currentUser = null; document.getElementById('user-btn-text').innerText = "Login"; closeRewards(); }
         function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
         function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
         function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
         
         function showPrivacy() { 
             document.getElementById('legal-title').innerText = "Privacy Policy"; 
-            document.getElementById('legal-content').innerHTML = `<p>We collect minimal data to process orders via WhatsApp. GPS location is used for delivery accuracy only.</p>`; 
+            document.getElementById('legal-content').innerHTML = `<p>We use your GPS location only when you send an order to ensure accurate delivery.</p>`; 
             openLegal(); 
         }
         function showTerms() { 
             document.getElementById('legal-title').innerText = "Terms of Use"; 
-            document.getElementById('legal-content').innerHTML = `<p>Delivery fee is fixed at R15. ShakScore is non-transferable.</p>`; 
+            document.getElementById('legal-content').innerHTML = `<p>Delivery fee is R5.00 within Shakung. 1 SS = R1.</p>`; 
             openLegal(); 
         }
         function openLegal() { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('legal-view').classList.remove('hidden-view'); }
         function closeLegal() { document.getElementById('legal-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
 
-        setTimeout(() => renderProducts(), 1200);
+        setTimeout(() => renderProducts(), 1000);
         updateUI();
     </script>
 </body>
