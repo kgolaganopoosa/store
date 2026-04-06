@@ -39,7 +39,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .category-btn.active { background-color: #7e22ce; color: white; border-color: #7e22ce; }
         
-        /* Tier Gradients */
         .tier-gold { background: linear-gradient(to bottom right, #7e22ce, #4338ca); }
         .tier-platinum { background: linear-gradient(to bottom right, #1f2937, #111827, #000000); }
     </style>
@@ -99,7 +98,6 @@
 
             <div id="product-container" class="product-grid">
                 <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
-                <div class="bg-white p-4 rounded-3xl border border-gray-100 h-80 flex flex-col"><div class="skeleton w-full h-40 mb-4"></div><div class="skeleton w-2/3 h-4 mb-2"></div><div class="skeleton w-full h-10 mt-auto"></div></div>
             </div>
         </div>
     </div>
@@ -117,7 +115,6 @@
                 <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Available Balance</p>
                 <h3 class="text-5xl font-black mb-1"><span id="display-balance">250.00</span> <span class="text-2xl font-normal opacity-70">SS</span></h3>
                 <p id="card-note" class="text-[10px] font-bold text-purple-200 mb-6 italic">*ShakScore (SS) is equivalent to South African Rands</p>
-                
                 <div class="flex justify-between items-end border-t border-white/20 pt-4">
                     <div>
                         <p id="owner-name-display" class="text-sm font-bold"></p>
@@ -126,11 +123,10 @@
                     <span id="tier-badge" class="text-[10px] bg-white/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">GOLD TIER</span>
                 </div>
             </div>
-            
             <h3 class="font-bold text-lg mb-4">Statement History</h3>
             <div class="space-y-3">
                 <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div><p class="font-bold text-sm">Signup Bonus</p><p class="text-[10px] text-gray-400">Mar 22, 2026</p></div>
+                    <div><p class="font-bold text-sm">Signup Bonus</p><p class="text-[10px] text-gray-400">Apr 06, 2026</p></div>
                     <span class="text-green-600 font-black">+250.00 SS</span>
                 </div>
             </div>
@@ -170,7 +166,7 @@
             <div id="cart-summary" class="mb-4 hidden">
                 <div class="flex justify-between items-center mb-6">
                     <button onclick="clearCart()" class="text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100">Clear</button>
-                    <button id="copy-btn" onclick="copyOrder()" class="text-purple-700 text-[10px] font-black uppercase tracking-widest bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100">
+                    <button onclick="copyOrder()" class="text-purple-700 text-[10px] font-black uppercase tracking-widest bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100">
                         <i class="fa-solid fa-copy mr-1"></i> Copy Order
                     </button>
                     <div class="text-right">
@@ -179,7 +175,7 @@
                     </div>
                 </div>
             </div>
-            <button id="whatsapp-btn" onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg">
+            <button onclick="sendToWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg">
                 <i id="lock-icon" class="fa-solid fa-lock text-sm opacity-50"></i>
                 <i class="fa-brands fa-whatsapp text-2xl"></i> Send to WhatsApp
             </button>
@@ -216,8 +212,7 @@
         const DELIVERY_FEE = 15.00;
         let currentCategory = 'All';
         const ACCOUNTS = { 
-            "1234": { id: "SHAK-2026-001", fullName: "Kgolagano P.", firstName: "Kgolagano", tier: "gold" },
-            "0001": { id: "SHAK-2026-999", fullName: "Platinum Member", firstName: "VIP", tier: "platinum" }
+            "1234": { id: "SHAK-2026-001", fullName: "Kgolagano P.", firstName: "Kgolagano", tier: "gold" }
         };
         const PRODUCTS = [
             { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
@@ -241,27 +236,45 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = PRODUCTS.filter(p => (currentCategory === 'All' || p.category === currentCategory) && p.name.toLowerCase().includes(query));
             const container = document.getElementById('product-container');
+            
+            const qtyOptions = Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('');
+
             container.innerHTML = filtered.map(p => `
                 <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
-                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-4 bg-gray-50 p-2 cursor-zoom-in">
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-2 bg-gray-50 p-2 cursor-zoom-in">
                     <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
                     <h3 class="font-bold text-xs mb-1 h-8 line-clamp-2">${p.name}</h3>
-                    <p class="text-purple-700 font-black text-lg mb-3">R${p.price.toFixed(2)}</p>
-                    <button onclick="addToCart(${p.id})" class="w-full bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add to List</button>
+                    <p class="text-purple-700 font-black text-lg mb-2">R${p.price.toFixed(2)}</p>
+                    
+                    <div class="flex gap-2 mt-auto">
+                        <select id="qty-${p.id}" class="bg-gray-100 border-none rounded-xl px-2 text-xs font-bold outline-none focus:ring-2 focus:ring-purple-500">
+                            ${qtyOptions}
+                        </select>
+                        <button onclick="addToCart(${p.id})" class="flex-grow bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add</button>
+                    </div>
                 </div>`).join('');
         }
 
         function addToCart(id) {
             const p = PRODUCTS.find(x => x.id === id);
-            cart.push(p);
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const existing = cart.find(item => item.id === id);
+            if(existing) { existing.quantity += qty; } else { cart.push({ ...p, quantity: qty }); }
             localStorage.setItem('shak_cart', JSON.stringify(cart));
             updateUI();
-            showToast(`${p.name} added!`);
+            showToast(`${qty}x ${p.name} added!`);
+        }
+
+        function updateQuantity(index, delta) {
+            cart[index].quantity += delta;
+            if(cart[index].quantity < 1) return removeFromCart(index);
+            localStorage.setItem('shak_cart', JSON.stringify(cart));
+            updateUI();
         }
 
         function updateUI() {
-            document.getElementById('cart-count').innerText = cart.length;
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
+            document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.quantity, 0);
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const summary = document.getElementById('cart-summary');
             if(cart.length > 0) {
                 summary.classList.remove('hidden');
@@ -271,122 +284,74 @@
             document.getElementById('cart-items').innerHTML = cart.map((item, index) => `
                 <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
                     <img src="${item.img}" class="w-10 h-10 object-contain bg-white rounded-lg p-1">
-                    <div class="flex-grow"><p class="font-bold text-[11px]">${item.name}</p><p class="text-purple-600 font-black text-[10px]">R${item.price.toFixed(2)}</p></div>
-                    <button onclick="removeFromCart(${index})" class="text-red-400 p-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    <div class="flex-grow">
+                        <p class="font-bold text-[11px] leading-tight">${item.name}</p>
+                        <p class="text-purple-600 font-black text-[10px]">R${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center bg-white rounded-full border border-gray-200 px-2">
+                        <button onclick="updateQuantity(${index}, -1)" class="w-6 h-8 text-purple-700 font-bold">-</button>
+                        <span class="w-6 text-center text-[11px] font-black">${item.quantity}</span>
+                        <button onclick="updateQuantity(${index}, 1)" class="w-6 h-8 text-purple-700 font-bold">+</button>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 ml-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                 </div>`).join('');
-        }
-
-        async function getLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) return resolve(null);
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`),
-                    () => resolve(null),
-                    { timeout: 5000 }
-                );
-            });
-        }
-
-        async function copyOrder() {
-            if(!currentUser) { toggleCart(); openLogin(); return; }
-            const loc = await getLocation();
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
-            const items = cart.map(i => `• ${i.name}`).join('\n');
-            const locStr = loc ? `\nLOCATION: ${loc}` : "";
-            const orderText = `SHOP SHAKUNG LIST\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n------------------\n${items}\n------------------\nTotal + Fee: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
-            navigator.clipboard.writeText(orderText).then(() => showToast("Order copied!"));
         }
 
         async function sendToWhatsApp() {
             if(!currentUser) { toggleCart(); openLogin(); return; }
             if(cart.length === 0) return;
-            showToast("Fetching location...");
-            const loc = await getLocation();
-            const subtotal = cart.reduce((s, i) => s + i.price, 0);
-            const items = cart.map(i => `• ${i.name}`).join('\n');
-            const locStr = loc ? `\nLOCATION: ${loc}` : "";
-            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const items = cart.map(i => `• [${i.quantity}x] ${i.name}`).join('\n');
+            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
         }
 
-        function verifyPin() {
-            const pin = document.getElementById('pin-input').value;
-            if(ACCOUNTS[pin]) {
-                currentUser = ACCOUNTS[pin];
-                updateAuthUI();
-                closeLogin();
-                
-                // Update Card View Details
-                document.getElementById('owner-name-display').innerText = currentUser.fullName;
-                document.getElementById('customer-id-display-card').innerText = currentUser.id;
-                
-                // Tier specific UI
-                const card = document.getElementById('card-element');
-                const badge = document.getElementById('tier-badge');
-                const note = document.getElementById('card-note');
-                
-                if(currentUser.tier === "platinum") {
-                    card.className = "rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-platinum";
-                    badge.innerText = "PLATINUM TIER";
-                    note.style.color = "#9ca3af"; // Gray note for platinum
-                } else {
-                    card.className = "rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-gold";
-                    badge.innerText = "GOLD TIER";
-                    note.style.color = "#e9d5ff"; // Purple note for gold
-                }
-                
-                showToast("Logged in!");
-            } else { alert("Wrong PIN"); }
+        function copyOrder() {
+            if(!currentUser) { toggleCart(); openLogin(); return; }
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const items = cart.map(i => `• [${i.quantity}x] ${i.name}`).join('\n');
+            const text = `SHOP SHAKUNG LIST\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n------------------\n${items}\n------------------\nTotal: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            navigator.clipboard.writeText(text).then(() => showToast("Order copied!"));
         }
 
+        // Standard helpers
+        function removeFromCart(i) { cart.splice(i, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
+        function clearCart() { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
         function filterByCategory(cat) { currentCategory = cat; document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat)); renderProducts(); }
         function runSearch() { renderProducts(); }
-        function clearCart() { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
-        function removeFromCart(i) { cart.splice(i, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
-        function handleAuthClick() { if (currentUser) { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('rewards-view').classList.remove('hidden-view'); } else { openLogin(); } }
+        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
         function openLogin() { document.getElementById('login-modal').classList.replace('hidden', 'flex'); }
-        function closeLogin() { document.getElementById('login-modal').classList.replace('flex', 'hidden'); document.getElementById('pin-input').value = ""; }
+        function closeLogin() { document.getElementById('login-modal').classList.replace('flex', 'hidden'); }
+        function handleAuthClick() { if (currentUser) { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('rewards-view').classList.remove('hidden-view'); } else { openLogin(); } }
+        function verifyPin() { 
+            const pin = document.getElementById('pin-input').value; 
+            if(ACCOUNTS[pin]) { 
+                currentUser = ACCOUNTS[pin]; 
+                closeLogin(); 
+                document.getElementById('owner-name-display').innerText = currentUser.fullName;
+                document.getElementById('customer-id-display-card').innerText = currentUser.id;
+                updateAuthUI(); 
+                showToast("Logged in!"); 
+            } else { alert("Wrong PIN"); }
+        }
+        function updateAuthUI() { document.getElementById('user-btn-text').innerText = currentUser ? currentUser.firstName : "Login"; }
         function logout() { currentUser = null; updateAuthUI(); closeRewards(); }
-        function updateAuthUI() { document.getElementById('user-btn-text').innerText = currentUser ? currentUser.firstName : "Login"; document.getElementById('lock-icon').className = currentUser ? "fa-solid fa-check-circle text-sm opacity-50" : "fa-solid fa-lock text-sm opacity-50"; }
         function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
+        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
         
         function showPrivacy() { 
             document.getElementById('legal-title').innerText = "Privacy Policy"; 
-            document.getElementById('legal-content').innerHTML = `
-                <div class="space-y-4">
-                    <p class="font-bold">Effective Date: March 24, 2026</p>
-                    <p>At Shop Shakung (powered by Petal Chain), we value your privacy. This policy explains how we handle your data.</p>
-                    <h3 class="font-bold text-gray-900">1. Information We Collect</h3>
-                    <p>We collect your name and Customer ID to manage your ShakScore balance. When you place an order, we request access to your GPS location to ensure accurate delivery to your doorstep.</p>
-                    <h3 class="font-bold text-gray-900">2. WhatsApp Communication</h3>
-                    <p>Since we operate via WhatsApp, your phone number and chat history with our service are stored by WhatsApp according to their own privacy standards. We only use this information to fulfill your specific orders.</p>
-                    <h3 class="font-bold text-gray-900">3. Data Security</h3>
-                    <p>Your PIN is stored locally on your device for security. We do not sell your personal data to third parties.</p>
-                </div>`; 
+            document.getElementById('legal-content').innerHTML = `<p>We collect minimal data to process orders via WhatsApp. GPS location is used for delivery accuracy only.</p>`; 
             openLegal(); 
         }
-        
         function showTerms() { 
             document.getElementById('legal-title').innerText = "Terms of Use"; 
-            document.getElementById('legal-content').innerHTML = `
-                <div class="space-y-4">
-                    <h3 class="font-bold text-gray-900">1. Service Availability</h3>
-                    <p>Shop Shakung currently serves the Shakung community. Delivery is subject to local availability and product stock.</p>
-                    <h3 class="font-bold text-gray-900">2. Pricing & Fees</h3>
-                    <p>All prices are listed in South African Rands (ZAR). A flat delivery fee of R15.00 is applied to every order to cover local logistics.</p>
-                    <h3 class="font-bold text-gray-900">3. ShakScore Rewards</h3>
-                    <p>ShakScore (SS) is a digital loyalty credit. 1 SS = 1 ZAR. Credits are non-transferable and can only be used for purchases within the Shop Shakung platform.</p>
-                    <h3 class="font-bold text-gray-900">4. Order Fulfillment</h3>
-                    <p>An order is only confirmed once you have sent the generated list to our WhatsApp business line and received a confirmation message from our team.</p>
-                </div>`; 
+            document.getElementById('legal-content').innerHTML = `<p>Delivery fee is fixed at R15. ShakScore is non-transferable.</p>`; 
             openLegal(); 
         }
-        
         function openLegal() { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('legal-view').classList.remove('hidden-view'); }
         function closeLegal() { document.getElementById('legal-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
-        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
-        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
-        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
 
         setTimeout(() => renderProducts(), 1200);
         updateUI();
