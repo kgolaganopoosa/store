@@ -38,6 +38,7 @@
         html { scroll-behavior: smooth; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .category-btn.active { background-color: #7e22ce; color: white; border-color: #7e22ce; }
+        .category-btn.deals-active { background-color: #dc2626; color: white; border-color: #dc2626; }
         
         .tier-gold { background: linear-gradient(to bottom right, #7e22ce, #4338ca); }
         .tier-platinum { background: linear-gradient(to bottom right, #1f2937, #111827, #000000); }
@@ -90,6 +91,7 @@
 
             <div class="flex gap-2 overflow-x-auto no-scrollbar pb-6">
                 <button onclick="filterByCategory('All')" class="category-btn active whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">All</button>
+                <button onclick="filterByCategory('Deals')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border-2 border-red-500 font-bold text-sm transition-all bg-white text-red-600"><i class="fa-solid fa-fire mr-1"></i> Deals</button>
                 <button onclick="filterByCategory('Bakery')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Bakery</button>
                 <button onclick="filterByCategory('Dairy')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Dairy</button>
                 <button onclick="filterByCategory('Pantry')" class="category-btn whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 font-bold text-sm transition-all bg-white text-gray-600">Pantry</button>
@@ -111,7 +113,7 @@
             <button onclick="logout()" class="text-red-500 font-bold text-[10px] bg-red-50 px-4 py-1.5 rounded-full">LOGOUT</button>
         </nav>
         <div class="max-w-2xl mx-auto p-6">
-            <div id="card-element" class="rounded-3xl p-8 text-white mb-6 shadow-xl relative overflow-hidden transition-all duration-500 tier-gold">
+            <div id="card-element" class="rounded-3xl p-8 text-white mb-4 shadow-xl relative overflow-hidden transition-all duration-500 tier-gold">
                 <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Available Balance</p>
                 <h3 class="text-5xl font-black mb-1"><span id="display-balance">250.00</span> <span class="text-2xl font-normal opacity-70">SS</span></h3>
                 <p id="card-note" class="text-[10px] font-bold text-purple-200 mb-6 italic">*ShakScore (SS) is equivalent to South African Rands</p>
@@ -123,6 +125,12 @@
                     <span id="tier-badge" class="text-[10px] bg-white/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">GOLD TIER</span>
                 </div>
             </div>
+            
+            <div class="bg-purple-50 border border-purple-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
+                <i class="fa-solid fa-circle-info text-purple-600"></i>
+                <p class="text-xs font-bold text-purple-800">ShakScore(SS) is equivalent to South African Rand(ZAR)</p>
+            </div>
+
             <h3 class="font-bold text-lg mb-4">Statement History</h3>
             <div class="space-y-3">
                 <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
@@ -131,14 +139,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="legal-view" class="hidden-view min-h-screen bg-white">
-        <nav class="p-4 border-b flex items-center gap-4 bg-white sticky top-0 z-50">
-            <button onclick="closeLegal()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
-            <h2 id="legal-title" class="text-xl font-bold">Legal</h2>
-        </nav>
-        <div class="max-w-3xl mx-auto p-6 text-gray-600 leading-relaxed text-sm" id="legal-content"></div>
     </div>
 
     <div id="login-modal" class="fixed inset-0 bg-black/60 z-[1000] hidden items-center justify-center p-4 backdrop-blur-sm">
@@ -181,28 +181,17 @@
         </div>
     </div>
 
+    <div id="legal-view" class="hidden-view min-h-screen bg-white">
+        <nav class="p-4 border-b flex items-center gap-4 bg-white sticky top-0 z-50">
+            <button onclick="closeLegal()" class="text-gray-600 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="legal-title" class="text-xl font-bold">Legal</h2>
+        </nav>
+        <div class="max-w-3xl mx-auto p-6 text-gray-600 leading-relaxed text-sm" id="legal-content"></div>
+    </div>
+
     <footer class="bg-white border-t border-gray-200 pt-12 pb-8 mt-auto">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10 text-center md:text-left">
-                <div>
-                    <h4 class="font-black text-purple-700 text-xl mb-4">Shop Shakung</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">Neighborhood groceries powered by Petal Chain.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-900 mb-4 text-sm uppercase">Legal Information</h4>
-                    <ul class="text-sm text-gray-600 space-y-3">
-                        <li><button onclick="showPrivacy()" class="hover:text-purple-700">Privacy Policy</button></li>
-                        <li><button onclick="showTerms()" class="hover:text-purple-700">Terms of Use</button></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-900 mb-4 text-sm uppercase">Quick Support</h4>
-                    <a href="https://wa.me/27646575290" class="text-green-600 font-bold hover:underline">WhatsApp Helpdesk</a>
-                </div>
-            </div>
-            <div class="pt-8 border-t border-gray-100 text-center">
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2026 Petal Chain ecosystem</p>
-            </div>
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2026 Petal Chain ecosystem</p>
         </div>
     </footer>
 
@@ -213,10 +202,12 @@
         const ACCOUNTS = { 
             "1234": { id: "SHAK-2026-001", fullName: "Kgolagano P.", firstName: "Kgolagano", tier: "gold" }
         };
+
         const PRODUCTS = [
             { id: 1, name: "SASKO Brown Bread", category: "Bakery", price: 18.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskobrownbread.png" },
             { id: 2, name: "SASKO White Bread", category: "Bakery", price: 17.50, img: "https://raw.githubusercontent.com/kgolaganopoosa/store/refs/heads/main/products/saskowhitebread.png" },
-            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", price: 34.00, img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" }
+            { id: 4, name: "Ace Maize Meal (2.5kg)", category: "Pantry", price: 34.00, img: "https://pantrymagic.co.za/wp-content/uploads/2021/01/ace-maize-meal-2.5kg.jpg" },
+            { id: 5, name: "Special: 2L Coke + Chips", category: "Deals", price: 45.00, img: "https://via.placeholder.com/300x300?text=Combo+Deal", isDeal: true }
         ];
 
         let currentUser = null;
@@ -238,16 +229,17 @@
             const qtyOptions = Array.from({length: 24}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('');
 
             container.innerHTML = filtered.map(p => `
-                <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex flex-col h-full">
-                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-2 bg-gray-50 p-2 cursor-zoom-in">
-                    <p class="text-[10px] text-purple-600 font-black uppercase mb-1">${p.category}</p>
+                <div class="bg-white rounded-3xl p-4 shadow-md border ${p.isDeal ? 'border-red-200 bg-red-50/30' : 'border-gray-100'} flex flex-col h-full relative">
+                    ${p.isDeal ? '<span class="absolute top-2 right-2 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase z-10">Limited Deal</span>' : ''}
+                    <img src="${p.img}" onclick="openLightbox('${p.img}')" class="w-full h-32 object-contain rounded-2xl mb-2 bg-white p-2 cursor-zoom-in">
+                    <p class="text-[10px] ${p.isDeal ? 'text-red-600' : 'text-purple-600'} font-black uppercase mb-1">${p.category}</p>
                     <h3 class="font-bold text-xs mb-1 h-8 line-clamp-2">${p.name}</h3>
-                    <p class="text-purple-700 font-black text-lg mb-2">R${p.price.toFixed(2)}</p>
+                    <p class="${p.isDeal ? 'text-red-600' : 'text-purple-700'} font-black text-lg mb-2">R${p.price.toFixed(2)}</p>
                     <div class="flex gap-2 mt-auto">
                         <select id="qty-${p.id}" class="bg-gray-100 border-none rounded-xl px-2 text-xs font-bold outline-none">
                             ${qtyOptions}
                         </select>
-                        <button onclick="addToCart(${p.id})" class="flex-grow bg-purple-700 text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add</button>
+                        <button onclick="addToCart(${p.id})" class="flex-grow ${p.isDeal ? 'bg-red-600' : 'bg-purple-700'} text-white py-3 rounded-2xl font-black text-[10px] uppercase active:scale-95">Add</button>
                     </div>
                 </div>`).join('');
         }
@@ -262,13 +254,6 @@
             showToast(`${qty}x ${p.name} added!`);
         }
 
-        function updateQuantity(index, delta) {
-            cart[index].quantity += delta;
-            if(cart[index].quantity < 1) return removeFromCart(index);
-            localStorage.setItem('shak_cart', JSON.stringify(cart));
-            updateUI();
-        }
-
         function updateUI() {
             document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.quantity, 0);
             const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
@@ -280,7 +265,7 @@
             
             document.getElementById('cart-items').innerHTML = cart.map((item, index) => `
                 <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
-                    <img src="${item.img}" class="w-10 h-10 object-contain bg-white rounded-lg p-1">
+                    <img src="${item.img}" onclick="openLightbox('${item.img}')" class="w-10 h-10 object-contain bg-white rounded-lg p-1 cursor-pointer">
                     <div class="flex-grow">
                         <p class="font-bold text-[11px] leading-tight">${item.name}</p>
                         <p class="text-purple-600 font-black text-[10px]">R${(item.price * item.quantity).toFixed(2)}</p>
@@ -294,28 +279,15 @@
                 </div>`).join('');
         }
 
-        async function getPosition() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) return resolve(null);
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve(`https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`),
-                    () => resolve(null),
-                    { timeout: 5000 }
-                );
-            });
-        }
-
         async function sendToWhatsApp() {
             if(!currentUser) { toggleCart(); openLogin(); return; }
             if(cart.length === 0) return;
             
-            showToast("Adding location...");
-            const mapLink = await getPosition();
-            const locStr = mapLink ? `\n📍 DELIVERY LOCATION:\n${mapLink}` : "\n(Location not provided)";
-            
             const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
-            const items = cart.map(i => `• [${i.quantity}x] ${i.name}`).join('\n');
-            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}${locStr}\n\n${items}\n\nTOTAL: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            const items = cart.map(i => `• [${i.quantity}x] ${i.name} - R${(i.price * i.quantity).toFixed(2)}`).join('\n');
+            
+            const receipt = `SHOP SHAKUNG ORDER\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n\n${items}\n\n------------------\nSubtotal: R${subtotal.toFixed(2)}\nDelivery Fee: R${DELIVERY_FEE.toFixed(2)}\nTOTAL AMOUNT: R${(subtotal + DELIVERY_FEE).toFixed(2)}\n------------------`;
+            
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('*' + receipt + '*')}`, '_blank');
         }
 
@@ -323,13 +295,30 @@
             if(!currentUser) { toggleCart(); openLogin(); return; }
             const subtotal = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             const items = cart.map(i => `• [${i.quantity}x] ${i.name}`).join('\n');
-            const text = `SHOP SHAKUNG LIST\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n------------------\n${items}\n------------------\nTotal: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
+            const text = `SHOP SHAKUNG LIST\nCUSTOMER: ${currentUser.fullName}\nID: ${currentUser.id}\n------------------\n${items}\n------------------\nSubtotal: R${subtotal.toFixed(2)}\nDelivery Fee: R${DELIVERY_FEE.toFixed(2)}\nTotal: R${(subtotal + DELIVERY_FEE).toFixed(2)}`;
             navigator.clipboard.writeText(text).then(() => showToast("Order copied!"));
+        }
+
+        function filterByCategory(cat) { 
+            currentCategory = cat; 
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active', 'deals-active');
+                if(btn.innerText.includes(cat)) {
+                    btn.classList.add(cat === 'Deals' ? 'deals-active' : 'active');
+                }
+            }); 
+            renderProducts(); 
+        }
+
+        function updateQuantity(index, delta) {
+            cart[index].quantity += delta;
+            if(cart[index].quantity < 1) return removeFromCart(index);
+            localStorage.setItem('shak_cart', JSON.stringify(cart));
+            updateUI();
         }
 
         function removeFromCart(i) { cart.splice(i, 1); localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
         function clearCart() { cart = []; localStorage.setItem('shak_cart', JSON.stringify(cart)); updateUI(); }
-        function filterByCategory(cat) { currentCategory = cat; document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cat)); renderProducts(); }
         function runSearch() { renderProducts(); }
         function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
         function openLogin() { document.getElementById('login-modal').classList.replace('hidden', 'flex'); }
@@ -352,21 +341,8 @@
         function closeRewards() { document.getElementById('rewards-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
         function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('active'); }
         function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
-        
-        function showPrivacy() { 
-            document.getElementById('legal-title').innerText = "Privacy Policy"; 
-            document.getElementById('legal-content').innerHTML = `<p>We use your GPS location only when you send an order to ensure accurate delivery.</p>`; 
-            openLegal(); 
-        }
-        function showTerms() { 
-            document.getElementById('legal-title').innerText = "Terms of Use"; 
-            document.getElementById('legal-content').innerHTML = `<p>Delivery fee is R5.00 within Shakung. 1 SS = R1.</p>`; 
-            openLegal(); 
-        }
-        function openLegal() { document.getElementById('shop-view').classList.add('hidden-view'); document.getElementById('legal-view').classList.remove('hidden-view'); }
-        function closeLegal() { document.getElementById('legal-view').classList.add('hidden-view'); document.getElementById('shop-view').classList.remove('hidden-view'); }
 
-        setTimeout(() => renderProducts(), 1000);
+        setTimeout(() => renderProducts(), 500);
         updateUI();
     </script>
 </body>
